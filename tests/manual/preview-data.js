@@ -19,7 +19,7 @@
     var noSub = params.get('nosub') === '1';
     return RalgrumToast.show(
       { provider: 'deezer', type: 'track', id: '3135556', url: 'https://www.deezer.com/track/3135556' },
-      { title: 'Harder Better Faster Stronger', subtitle: noSub ? '' : 'Daft Punk - Discovery', artwork: ART },
+      { title: 'Harder Better Faster Stronger', subtitle: noSub ? '' : 'Daft Punk - Discovery', artwork: ART, explicit: params.get('explicit') === '1' },
       [
         { provider: 'deezer', type: 'album', id: '302127', url: 'https://www.deezer.com/album/302127', title: 'Discovery' },
         { provider: 'deezer', type: 'artist', id: '27', url: 'https://www.deezer.com/artist/27', title: 'Daft Punk' }
@@ -99,7 +99,42 @@
         out.primaryRect = rr('.rg-primary');
         var secs = shadow.querySelectorAll('.rg-secondary');
         out.secondaries = secs.length;
+        var badge = shadow.querySelector('.rg-explicit');
+        if (badge) {
+          var bb = badge.getBoundingClientRect();
+          var bc = getComputedStyle(badge);
+          out.explicit = { w: Math.round(bb.width), h: Math.round(bb.height), border: bc.borderColor, bg: bc.backgroundColor, size: bc.fontSize, weight: bc.fontWeight, color: bc.color, text: badge.textContent };
+        } else {
+          out.explicit = null;
+        }
+        var chipLogo = shadow.querySelector('.rg-provcol svg');
+        var chipLabel = shadow.querySelector('.rg-provlabel');
+        if (chipLogo && chipLabel) {
+          var cb = chipLogo.getBoundingClientRect();
+          var lb = chipLabel.getBoundingClientRect();
+          out.chipAlign = {
+            logoCY: Math.round((cb.top + cb.bottom) / 2 * 10) / 10,
+            textCY: Math.round((lb.top + lb.bottom) / 2 * 10) / 10
+          };
+        }
+        out.blur = getComputedStyle(shadow.querySelector('.rg-card')).backdropFilter;
         out.primaryText = shadow.querySelector('.rg-primary').textContent;
+        var head = shadow.querySelector('.rg-head');
+        var brandEl = shadow.querySelector('.rg-brand');
+        var logoEl = shadow.querySelector('.rg-logo');
+        if (head && brandEl) {
+          var hb = head.getBoundingClientRect();
+          var bb = brandEl.getBoundingClientRect();
+          out.headGeom = {
+            headH: Math.round(hb.height),
+            brandCY: Math.round((bb.top + bb.bottom) / 2 * 10) / 10,
+            headCY: Math.round((hb.top + hb.bottom) / 2 * 10) / 10
+          };
+        }
+        if (logoEl) {
+          var lb = logoEl.getBoundingClientRect();
+          out.logoGeom = { h: Math.round(lb.height), top: Math.round(lb.top * 10) / 10 };
+        }
         out.artistPresent = !!shadow.querySelector('.rg-tartist');
         out.xSize = css('.rg-x', ['width', 'height']);
         var xg2 = shadow.querySelector('.rg-x svg');
@@ -111,6 +146,15 @@
       } catch (e) {
         out.error = String(e);
       }
+        if (params.get('restale') === '1') {
+          var ent = { provider: 'deezer', type: 'track', id: '999', url: 'https://www.deezer.com/track/999' };
+          var first = RalgrumToast.showOncePerPage(ent, { title: '', subtitle: '' });
+          var second = RalgrumToast.showOncePerPage(ent, { title: 'Late Title', subtitle: 'Late Artist' });
+          var third = RalgrumToast.showOncePerPage(ent, { title: 'Late Title', subtitle: 'Late Artist' });
+          var fresh = document.querySelector('.ralgrum-toast-host').shadowRoot;
+          var lateTitle = fresh.querySelector('.rg-ttitle');
+          out.restale = { first: first, second: second, third: third, rendered: lateTitle ? lateTitle.textContent : null };
+        }
       document.title = 'METRICS:' + JSON.stringify(out);
     }, 600);
     return;

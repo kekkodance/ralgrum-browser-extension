@@ -46,6 +46,11 @@
     } else {
       subtitle = performer || stateStr('ART_NAME') || '';
     }
+    if (/^https?://S*$/i.test(subtitle)) {
+      subtitle = stateStr('ART_NAME') || '';
+    }
+    var explicitRaw = stateNum('EXPLICIT_LYRICS_STATUS');
+    var explicit = entity.type === 'track' && explicitRaw !== '' && Number(explicitRaw) > 0;
     var related = [];
     try {
       if (stateText && entity.type === 'track') {
@@ -64,7 +69,7 @@
     } catch (e) {
       // ignore embedded state parse errors
     }
-    return { entity: entity, meta: { title: title, subtitle: subtitle, artwork: artwork }, related: related };
+    return { entity: entity, meta: { title: title, subtitle: subtitle, artwork: artwork, explicit: explicit }, related: related };
   }
   function shouldShow(entity, settings) {
     if (!settings) {
