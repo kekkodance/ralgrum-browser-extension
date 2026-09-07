@@ -57,6 +57,21 @@
         out.switchOff = css(sw, ['backgroundColor']);
         var divider = d.querySelector('.set-row:not(:last-child)');
         out.divider = divider ? css(divider, ['borderBottomColor', 'borderBottomWidth']) : null;
+        var headIcon = d.querySelector('.set-cardhead svg');
+        var headText = d.querySelector('.set-cardhead span');
+        if (headIcon && headText) {
+          var ib = headIcon.getBoundingClientRect();
+          var tb = headText.getBoundingClientRect();
+          out.align = {
+            iconCY: Math.round((ib.top + ib.bottom) / 2 * 10) / 10,
+            textCY: Math.round((tb.top + tb.bottom) / 2 * 10) / 10
+          };
+        }
+        var rows = Array.prototype.slice.call(d.querySelectorAll('.set-row'));
+        out.rowHeights = rows.map(function (r) { return Math.round(r.getBoundingClientRect().height); });
+        var cards = Array.prototype.slice.call(d.querySelectorAll('.set-card'));
+        out.cardRects = cards.map(function (c) { var b = c.getBoundingClientRect(); return { h: Math.round(b.height) }; });
+        out.bodyH = Math.round(d.body.getBoundingClientRect().height);
         out.saveButton = !!d.querySelector('button.primary');
         out.testLinks = d.querySelectorAll('a[href^="ralgrum://"]').length;
       } catch (e) {

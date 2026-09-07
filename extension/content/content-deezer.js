@@ -18,13 +18,39 @@
     var title = getMeta('og:title') || document.title || '';
     var artwork = getMeta('og:image') || detectors.deezerArtworkFor(entity);
     var performer = getMeta('music:musician') || getMeta('og:audio:artist') || '';
-    var subtitle = performer;
-    var related = [];
+    var stateText = '';
     try {
       var stateEl = document.getElementById('__DZR_APP_STATE__');
-      if (stateEl && stateEl.textContent && entity.type === 'track') {
-        var m = stateEl.textContent.match(/"ALB_ID"\s*:\s*"(\d+)"/);
-        var t = stateEl.textContent.match(/"ALB_TITLE"\s*:\s*"([^"]{1,120})"/);
+      if (stateEl && stateEl.textContent) {
+        stateText = stateEl.textContent;
+      }
+    } catch (e) {
+      // ignore embedded state read errors
+    }
+    function stateStr(key) {
+      var m = stateText.match(new RegExp('"' + key + '"\\s*:\\s*"([^"]{1,120})"'));
+      return m ? m[1] : '';
+    }
+    function stateNum(key) {
+      var m = stateText.match(new RegExp('"' + key + '"\\s*:\\s*(\\d+)'));
+      return m ? m[1] : '';
+    }
+    function grouped(value) {
+      var n = Number(value);
+      return isFinite(n) ? n.toLocaleString('en-US') : String(value);
+    }
+    var subtitle;
+    if (entity.type === 'artist') {
+      var fans = stateNum('NB_FAN');
+      subtitle = fans ? grouped(fans) + ' fans' : '';
+    } else {
+      subtitle = performer || stateStr('ART_NAME') || '';
+    }
+    var related = [];
+    try {
+      if (stateText && entity.type === 'track') {
+        var m = stateText.match(/"ALB_ID"\s*:\s*"(\d+)"/);
+        var t = stateText.match(/"ALB_TITLE"\s*:\s*"([^"]{1,120})"/);
         if (m && m[1] && m[1] !== '0') {
           related.push({
             provider: 'deezer',

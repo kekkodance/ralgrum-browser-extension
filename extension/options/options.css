@@ -2,6 +2,7 @@
 with 12.5px copy, 18181bb8 cards at radius 8 with 13px card headings,
 55px control rows split by hairline dividers, instant persist. Flat. */
 :root { color-scheme: dark; }
+*, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; background: #09090b; color: #fafafa; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
 body.is-popup { width: 340px; }
 .set-wrap { padding: 12px; }

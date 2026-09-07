@@ -11,25 +11,96 @@
     var href = link ? (link.getAttribute('href') || '') : '';
     return href || window.location.href;
   }
-  function jsonLdEntity(pageUrl) {
+  function jsonLdNodes() {
     try {
-      var scripts = Array.prototype.slice.call(document.querySelectorAll('script[type="application/ld+json"]'));
-      var detectors = window.RalgrumDetectors;
-      for (var i = 0; i < scripts.length; i++) {
-        try {
-          var data = JSON.parse(scripts[i].textContent || 'null');
-          var hit = detectors.parseSoundcloudFromJsonLd(data, pageUrl);
-          if (hit) {
-            return hit;
+      return Array.prototype.slice.call(document.querySelectorAll('script[type="application/ld+json"]'));
+    } catch (e) {
+      return [];
+    }
+  }
+  function jsonLdEntity(pageUrl) {
+    var scripts = jsonLdNodes();
+    var detectors = window.RalgrumDetectors;
+    for (var i = 0; i < scripts.length; i++) {
+      try {
+        var data = JSON.parse(scripts[i].textContent || 'null');
+        var hit = detectors.parseSoundcloudFromJsonLd(data, pageUrl);
+        if (hit) {
+          return hit;
+        }
+      } catch (e) {
+        // skip malformed block
+      }
+    }
+    return null;
+  }
+  function followCountFromNode(node) {
+    if (!node || typeof node !== 'object') {
+      return 0;
+    }
+    var stats = node.interactionStatistic;
+    var list = Array.isArray(stats) ? stats : [stats];
+    for (var i = 0; i < list.length; i++) {
+      var item = list[i];
+      if (!item || typeof item !== 'object') {
+        continue;
+      }
+      var kind = String(item.interactionType || '');
+      if (kind.toLowerCase().indexOf('follow') === -1) {
+        continue;
+      }
+      var n = Number(item.userInteractionCount);
+      if (isFinite(n) && n > 0) {
+        return n;
+      }
+    }
+    return 0;
+  }
+  function jsonLdFollowers() {
+    var scripts = jsonLdNodes();
+    for (var i = 0; i < scripts.length; i++) {
+      try {
+        var data = JSON.parse(scripts[i].textContent || 'null');
+        var list = Array.isArray(data) ? data : [data];
+        for (var j = 0; j < list.length; j++) {
+          var node = list[j];
+          if (!node || typeof node !== 'object') {
+            continue;
           }
-        } catch (e) {
-          // skip malformed block
+          var t = String(node['@type'] || '').toLowerCase();
+          if (t === 'musicgroup' || t === 'person') {
+            var n = followCountFromNode(node);
+            if (n > 0) {
+              return n;
+            }
+          }
+        }
+      } catch (e) {
+        // skip malformed block
+      }
+    }
+    return 0;
+  }
+  function hydrationFollowers() {
+    try {
+      var scripts = Array.prototype.slice.call(document.querySelectorAll('script:not([type])'));
+      for (var i = 0; i < scripts.length; i++) {
+        var text = scripts[i].textContent || '';
+        if (text.indexOf('followers_count') === -1) {
+          continue;
+        }
+        var m = text.match(/"followers_count"\s*:\s*(\d+)/);
+        if (m && Number(m[1]) > 0) {
+          return Number(m[1]);
         }
       }
     } catch (e) {
       // ignore
     }
-    return null;
+    return 0;
+  }
+  function grouped(value) {
+    return Number(value).toLocaleString('en-US');
   }
   function readPage() {
     var detectors = window.RalgrumDetectors;
@@ -48,6 +119,10 @@
     var artwork = getMeta('og:image') || getMeta('twitter:image') || '';
     var audioArtist = getMeta('og:audio:artist') || '';
     var subtitle = audioArtist;
+    if (entity.type === 'artist') {
+      var followers = jsonLdFollowers() || hydrationFollowers();
+      subtitle = followers > 0 ? grouped(followers) + ' followers' : '';
+    }
     return { entity: entity, meta: { title: title, subtitle: subtitle, artwork: artwork }, related: [] };
   }
   function shouldShow(entity, settings) {
