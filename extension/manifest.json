@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "ralgruM Browser Integration",
+  "version": "0.1.0",
+  "description": "Open Deezer and SoundCloud tracks, albums, playlists, and artists in ralgruM.",
+  "permissions": ["storage", "contextMenus", "activeTab"],
+  "host_permissions": [
+    "https://www.deezer.com/*",
+    "https://*.deezer.com/*",
+    "https://soundcloud.com/*",
+    "https://*.soundcloud.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "ralgruM",
+    "default_popup": "popup/popup.html"
+  },
+  "options_page": "options/options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.deezer.com/*", "https://*.deezer.com/*"],
+      "js": ["content/detectors.js", "content/toast.js", "content/content-deezer.js"],
+      "css": ["content/toast.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://soundcloud.com/*", "https://*.soundcloud.com/*"],
+      "js": ["content/detectors.js", "content/toast.js", "content/content-soundcloud.js"],
+      "css": ["content/toast.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+hello from apply_patch
+second line

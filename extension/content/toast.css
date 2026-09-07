@@ -1,0 +1,15 @@
+/* ralgruM toast host: plain page-level anchor, real styling lives in Shadow DOM. */
+.ralgrum-toast-host {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2147483647;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+.ralgrum-toast-pill {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2147483647;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
