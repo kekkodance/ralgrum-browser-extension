@@ -4,22 +4,27 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>ralgruM</title>
-<link rel="stylesheet" href="popup.css" />
+<link rel="stylesheet" href="../options/options.css" />
 </head>
-<body>
-<div class="panel">
-<p id="title" class="title">Checking this tab...</p>
-<p id="sub" class="sub"></p>
-<div class="actions">
-<button id="open" class="primary" disabled>Open in ralgruM</button>
+<body class="is-popup">
+<div class="set-wrap">
+<div class="set-head">
+<h1 class="set-title">Browser Integration</h1>
+<p class="set-copy">Choose when the ralgruM toast appears. Changes save automatically.</p>
 </div>
-<div class="actions">
-<button id="copy" class="secondary" disabled>Copy ralgruM link</button>
-<button id="copyOrig" class="secondary" disabled>Copy page link</button>
+<div class="set-card">
+<div class="set-cardhead"><svg width="13" height="13" viewBox="0 0 13 13" aria-hidden="true"><rect x="1" y="1.5" width="11" height="8" rx="2" fill="none" stroke="#a1a1aa" stroke-width="1.3"/><rect x="4" y="9" width="5" height="1.3" fill="#a1a1aa"/><circle cx="4" cy="5.5" r="0.9" fill="#a1a1aa"/><circle cx="6.5" cy="5.5" r="0.9" fill="#a1a1aa"/><circle cx="9" cy="5.5" r="0.9" fill="#a1a1aa"/></svg><span>Toast</span></div>
+<div class="set-row"><div class="set-row-main"><p class="set-row-label">Show toast automatically</p><p class="set-row-desc">Show on supported Deezer and SoundCloud pages.</p></div><input type="checkbox" class="switch" id="autoShow" aria-label="Show toast automatically" /></div>
+<div class="set-row"><div class="set-row-main"><p class="set-row-label">Tracks</p><p class="set-row-desc">Show on track pages.</p></div><input type="checkbox" class="switch" id="showOnTrack" aria-label="Show on tracks" /></div>
+<div class="set-row"><div class="set-row-main"><p class="set-row-label">Albums and playlists</p><p class="set-row-desc">Show on album and playlist pages.</p></div><input type="checkbox" class="switch" id="showOnCollection" aria-label="Show on albums and playlists" /></div>
+<div class="set-row"><div class="set-row-main"><p class="set-row-label">Artists</p><p class="set-row-desc">Show on artist pages.</p></div><input type="checkbox" class="switch" id="showOnArtist" aria-label="Show on artists" /></div>
 </div>
-<p id="status" class="status"></p>
-<a href="../options/options.html" target="_blank" class="options">Extension options</a>
+<div class="set-card">
+<div class="set-cardhead"><svg width="13" height="13" viewBox="0 0 13 13" aria-hidden="true"><circle cx="6.5" cy="6.5" r="5.5" fill="none" stroke="#a1a1aa" stroke-width="1.3"/><rect x="1" y="5.85" width="11" height="1.3" fill="#a1a1aa"/></svg><span>Providers</span></div>
+<div class="set-row"><div class="set-row-main"><p class="set-row-label">Deezer</p><p class="set-row-desc">Enable on Deezer pages.</p></div><input type="checkbox" class="switch" id="deezer" aria-label="Enable on Deezer" /></div>
+<div class="set-row"><div class="set-row-main"><p class="set-row-label">SoundCloud</p><p class="set-row-desc">Enable on SoundCloud pages.</p></div><input type="checkbox" class="switch" id="soundcloud" aria-label="Enable on SoundCloud" /></div>
 </div>
-<script src="popup.js"></script>
+</div>
+<script src="../options/options.js"></script>
 </body>
 </html>

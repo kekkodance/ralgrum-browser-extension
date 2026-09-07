@@ -7,7 +7,7 @@
   var page = params.get('page') || 'popup';
   var src = page === 'options'
     ? '../../extension/options/options.html'
-    : '../../extension/popup/popup.html?demo=1';
+    : '../../extension/popup/popup.html';
   var frame = document.createElement('iframe');
   frame.style.width = page === 'options' ? '620px' : '360px';
   frame.style.height = page === 'options' ? '900px' : '500px';
@@ -36,41 +36,29 @@
       var out = { page: page };
       try {
         var d = frame.contentDocument;
-        if (page === 'popup') {
-          var panel = d.querySelector('.panel');
-          out.panel = css(panel, ['backgroundColor', 'borderColor', 'borderRadius', 'padding']);
-          var title = d.querySelector('.title');
-          out.title = css(title, ['fontSize', 'fontWeight', 'color']);
-          var sub = d.querySelector('.sub');
-          out.sub = css(sub, ['fontSize', 'color']);
-          var primary = d.querySelector('.primary');
-          out.primary = css(primary, ['backgroundColor', 'borderColor', 'borderRadius', 'fontSize', 'fontWeight']);
-          out.primaryRect = rect(primary);
-          var secondary = d.querySelector('.secondary');
-          out.secondary = css(secondary, ['backgroundColor', 'borderColor', 'borderRadius', 'fontSize']);
-          out.secondaryRect = rect(secondary);
-          out.titleText = title.textContent;
-          out.openText = primary.textContent;
-        } else {
-          out.bodyBg = css(d.body, ['backgroundColor']);
-          var card = d.querySelector('.card');
-          out.card = css(card, ['backgroundColor', 'borderColor', 'borderRadius']);
-          var label = d.querySelector('.row-label');
-          out.label = css(label, ['fontSize', 'color']);
-          var desc = d.querySelector('.row-desc');
-          out.desc = css(desc, ['fontSize', 'color']);
-          var sw = d.querySelector('.switch');
-          sw.style.transition = 'none';
-          sw.checked = true;
-          var swOn = css(sw, ['backgroundColor', 'borderColor', 'width', 'height']);
-          sw.checked = false;
-          var swOff = css(sw, ['backgroundColor']);
-          out.switchOn = swOn;
-          out.switchOff = swOff;
-          var save = d.querySelector('button.primary');
-          out.save = css(save, ['backgroundColor', 'borderColor', 'borderRadius', 'fontSize']);
-          out.saveRect = rect(save);
-        }
+        out.bodyBg = css(d.body, ['backgroundColor']);
+        out.wrapPad = css(d.querySelector('.set-wrap'), ['padding']);
+        out.title = css(d.querySelector('.set-title'), ['fontSize', 'fontWeight', 'color']);
+        out.copy = css(d.querySelector('.set-copy'), ['fontSize', 'color', 'lineHeight']);
+        out.titleText = d.querySelector('.set-title').textContent;
+        var card = d.querySelector('.set-card');
+        out.card = css(card, ['backgroundColor', 'borderColor', 'borderRadius', 'padding']);
+        out.cardhead = css(d.querySelector('.set-cardhead'), ['fontSize', 'fontWeight', 'color']);
+        out.rows = d.querySelectorAll('.set-row').length;
+        var row = d.querySelector('.set-row');
+        out.rowMinH = css(row, ['minHeight']);
+        out.label = css(d.querySelector('.set-row-label'), ['fontSize', 'fontWeight', 'color', 'lineHeight']);
+        out.desc = css(d.querySelector('.set-row-desc'), ['fontSize', 'color']);
+        var sw = d.querySelector('.switch');
+        sw.style.transition = 'none';
+        sw.checked = true;
+        out.switchOn = css(sw, ['backgroundColor', 'borderColor', 'width', 'height']);
+        sw.checked = false;
+        out.switchOff = css(sw, ['backgroundColor']);
+        var divider = d.querySelector('.set-row:not(:last-child)');
+        out.divider = divider ? css(divider, ['borderBottomColor', 'borderBottomWidth']) : null;
+        out.saveButton = !!d.querySelector('button.primary');
+        out.testLinks = d.querySelectorAll('a[href^="ralgrum://"]').length;
       } catch (e) {
         out.error = String(e);
       }

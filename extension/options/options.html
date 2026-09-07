@@ -4,49 +4,25 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>ralgruM options</title>
-<style>
-:root { color-scheme: dark; }
-body { margin: 0; background: #09090b; color: #fafafa; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
-.wrap { max-width: 560px; padding: 20px; }
-h1 { font-size: 13.5px; font-weight: 600; color: #ffffff; margin: 0; }
-.lede { font-size: 12px; color: #a1a1aa; margin: 2px 0 0; }
-.card { background: #121215; border: 1px solid #27272a; border-radius: 12px; padding: 6px 16px; margin: 12px 0; }
-.row { display: flex; align-items: center; gap: 12px; padding: 9px 0; }
-.row + .row { border-top: 1px solid #27272a; }
-.row-main { flex: 1; min-width: 0; }
-.row-label { margin: 0; font-size: 13px; color: #fafafa; }
-.row-desc { margin: 2px 0 0; font-size: 11.5px; color: #a1a1aa; }
-.switch { position: relative; flex: none; width: 40px; height: 22px; appearance: none; border-radius: 999px; background: #27272a; border: 1px solid #27272a; cursor: pointer; transition: background 150ms ease-out, border-color 150ms ease-out; }
-.switch:checked { background: #6366f1; border-color: #6366f1; }
-.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 999px; background: #fafafa; transition: left 150ms ease-out; }
-.switch:checked::after { left: 20px; }
-.switch:focus-visible { outline: none; border-color: #6366f1; }
-button.primary { height: 34px; border-radius: 6px; border: 1px solid #818cf8c2; background: #6366f1; color: #fafafa; font-family: inherit; font-size: 13px; font-weight: 600; padding: 0 13px; cursor: pointer; }
-button.primary:hover { background: #5558e8; border-color: #a5b4fc; }
-#status { font-size: 12px; color: #10b981; min-height: 16px; }
-.test { margin-top: 8px; font-size: 12px; }
-.test a { color: #a1a1aa; }
-.test a:hover { color: #fafafa; }
-</style>
+<link rel="stylesheet" href="options.css" />
 </head>
-<body>
-<div class="wrap">
-<h1>ralgruM Browser Integration</h1>
-<p class="lede">Choose when the toast appears and test the ralgrum bridge.</p>
-<div class="card">
-<div class="row"><div class="row-main"><p class="row-label">Show toast automatically</p><p class="row-desc">Show on supported Deezer and SoundCloud pages</p></div><input type="checkbox" class="switch" id="autoShow" aria-label="Show toast automatically" /></div>
-<div class="row"><div class="row-main"><p class="row-label">Tracks</p><p class="row-desc">Show on track pages</p></div><input type="checkbox" class="switch" id="showOnTrack" aria-label="Show on tracks" /></div>
-<div class="row"><div class="row-main"><p class="row-label">Albums and playlists</p><p class="row-desc">Show on album and playlist pages</p></div><input type="checkbox" class="switch" id="showOnCollection" aria-label="Show on albums and playlists" /></div>
-<div class="row"><div class="row-main"><p class="row-label">Artists</p><p class="row-desc">Show on artist pages</p></div><input type="checkbox" class="switch" id="showOnArtist" aria-label="Show on artists" /></div>
-<div class="row"><div class="row-main"><p class="row-label">Deezer</p><p class="row-desc">Enable on Deezer pages</p></div><input type="checkbox" class="switch" id="deezer" aria-label="Enable on Deezer" /></div>
-<div class="row"><div class="row-main"><p class="row-label">SoundCloud</p><p class="row-desc">Enable on SoundCloud pages</p></div><input type="checkbox" class="switch" id="soundcloud" aria-label="Enable on SoundCloud" /></div>
+<body class="is-page">
+<div class="set-wrap">
+<div class="set-head">
+<h1 class="set-title">Browser Integration</h1>
+<p class="set-copy">Choose when the ralgruM toast appears. Changes save automatically.</p>
 </div>
-<button id="save" class="primary">Save</button>
-<p id="status"></p>
-<div class="card">
-<div class="row"><div class="row-main"><p class="row-label">Protocol test</p><p class="row-desc">If ralgruM is registered, a test link opens the app</p></div></div>
-<div class="test"><a href="ralgrum://open?provider=deezer&type=track&id=3135556&action=play&url=https%3A%2F%2Fwww.deezer.com%2Ftrack%2F3135556">Deezer track test</a></div>
-<div class="test"><a href="ralgrum://open?provider=soundcloud&type=track&action=play&url=https%3A%2F%2Fsoundcloud.com%2Ftest%2Fdemo">SoundCloud track test</a></div>
+<div class="set-card">
+<div class="set-cardhead"><svg width="13" height="13" viewBox="0 0 13 13" aria-hidden="true"><rect x="1" y="1.5" width="11" height="8" rx="2" fill="none" stroke="#a1a1aa" stroke-width="1.3"/><rect x="4" y="9" width="5" height="1.3" fill="#a1a1aa"/><circle cx="4" cy="5.5" r="0.9" fill="#a1a1aa"/><circle cx="6.5" cy="5.5" r="0.9" fill="#a1a1aa"/><circle cx="9" cy="5.5" r="0.9" fill="#a1a1aa"/></svg><span>Toast</span></div>
+<div class="set-row"><div class="set-row-main"><p class="set-row-label">Show toast automatically</p><p class="set-row-desc">Show on supported Deezer and SoundCloud pages.</p></div><input type="checkbox" class="switch" id="autoShow" aria-label="Show toast automatically" /></div>
+<div class="set-row"><div class="set-row-main"><p class="set-row-label">Tracks</p><p class="set-row-desc">Show on track pages.</p></div><input type="checkbox" class="switch" id="showOnTrack" aria-label="Show on tracks" /></div>
+<div class="set-row"><div class="set-row-main"><p class="set-row-label">Albums and playlists</p><p class="set-row-desc">Show on album and playlist pages.</p></div><input type="checkbox" class="switch" id="showOnCollection" aria-label="Show on albums and playlists" /></div>
+<div class="set-row"><div class="set-row-main"><p class="set-row-label">Artists</p><p class="set-row-desc">Show on artist pages.</p></div><input type="checkbox" class="switch" id="showOnArtist" aria-label="Show on artists" /></div>
+</div>
+<div class="set-card">
+<div class="set-cardhead"><svg width="13" height="13" viewBox="0 0 13 13" aria-hidden="true"><circle cx="6.5" cy="6.5" r="5.5" fill="none" stroke="#a1a1aa" stroke-width="1.3"/><rect x="1" y="5.85" width="11" height="1.3" fill="#a1a1aa"/></svg><span>Providers</span></div>
+<div class="set-row"><div class="set-row-main"><p class="set-row-label">Deezer</p><p class="set-row-desc">Enable on Deezer pages.</p></div><input type="checkbox" class="switch" id="deezer" aria-label="Enable on Deezer" /></div>
+<div class="set-row"><div class="set-row-main"><p class="set-row-label">SoundCloud</p><p class="set-row-desc">Enable on SoundCloud pages.</p></div><input type="checkbox" class="switch" id="soundcloud" aria-label="Enable on SoundCloud" /></div>
 </div>
 </div>
 <script src="options.js"></script>
