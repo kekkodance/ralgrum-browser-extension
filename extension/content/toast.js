@@ -1,10 +1,8 @@
-// RalgrumToast mirrors src/ui/toast.rs value for value.
-// Card: min 280 max 380, pad 12 vertical 16 horizontal, radius 12,
-// 1px BORDER, flat bg 121214f5, row gap 12, no shadow (theme.shadow=false).
-// Glyph 16 in kind color, title 13.5 semibold white, desc 12 muted,
-// actions h30 secondary buttons, close 28 with 12 glyph, entry 180ms
-// fade plus 8px rise. Action-less toasts auto dismiss in 6s with hover
-// pause; toasts with actions stay until dismissed, like the app.
+// RalgrumToast card layout: header (app logo, ralgruM, plain-x close),
+// center (queue row for tracks, collection header copy for albums,
+// playlists and artists), footer (primary plus secondary actions).
+// Every token mirrors the app: toast frame, plain_x_button, queue row,
+// collection header, primary button, secondary page action. Flat, no shadow.
 (function (root) {
   'use strict';
   var BORDER = '#27272a';
@@ -13,31 +11,17 @@
   var MUTED = '#a1a1aa';
   var PRIMARY = '#6366f1';
   var CARD_BG = '#121214f5';
-  var PANEL_BG = '#121215';
-  var ROW_HOVER = '#18181b';
+  var ROW_HOVER_BG = 'rgba(255, 255, 255, 0.04)';
+  var ART_BG = '#18181b';
   var DEEZER = '#a238ff';
   var SOUNDCLOUD = '#ff5500';
   var FONT = '"Segoe UI", system-ui, -apple-system, sans-serif';
-  var LIFETIME = 6000;
-  var TICK = 250;
   var SHOWN_KEYS = {};
   function accentFor(provider) {
-    if (provider === 'deezer') {
-      return DEEZER;
-    }
-    if (provider === 'soundcloud') {
-      return SOUNDCLOUD;
-    }
-    return PRIMARY;
+    return provider === 'soundcloud' ? SOUNDCLOUD : DEEZER;
   }
   function providerName(provider) {
-    if (provider === 'deezer') {
-      return 'Deezer';
-    }
-    if (provider === 'soundcloud') {
-      return 'SoundCloud';
-    }
-    return 'ralgruM';
+    return provider === 'soundcloud' ? 'SoundCloud' : 'Deezer';
   }
   function typeName(type) {
     if (type === 'album') {
@@ -58,8 +42,18 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
   }
-  function noteSvg(color) {
-    return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">'
+  function logoUrl() {
+    try {
+      if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
+        return chrome.runtime.getURL('icons/icon32.png');
+      }
+    } catch (e) {
+      // no extension runtime (dev preview), use glyph fallback
+    }
+    return null;
+  }
+  function brandGlyph(color) {
+    return '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">'
       + '<circle cx="5" cy="12" r="2.6" fill="' + color + '"/>'
       + '<circle cx="11.5" cy="10.5" r="2.6" fill="' + color + '"/>'
       + '<rect x="7" y="1.5" width="1.6" height="9" fill="' + color + '"/>'
@@ -67,10 +61,19 @@
       + '<rect x="7" y="1.5" width="8.1" height="1.6" fill="' + color + '"/>'
       + '</svg>';
   }
-  function xSvg() {
-    return '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">'
-      + '<rect x="2" y="5.2" width="8" height="1.6" rx="0.8" fill="' + MUTED + '" transform="rotate(45 6 6)"/>'
-      + '<rect x="2" y="5.2" width="8" height="1.6" rx="0.8" fill="' + MUTED + '" transform="rotate(-45 6 6)"/>'
+  function musicGlyph() {
+    return '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">'
+      + '<circle cx="5" cy="12" r="2.6" fill="' + MUTED + '"/>'
+      + '<circle cx="11.5" cy="10.5" r="2.6" fill="' + MUTED + '"/>'
+      + '<rect x="7" y="1.5" width="1.6" height="9" fill="' + MUTED + '"/>'
+      + '<rect x="13.5" y="1.5" width="1.6" height="7" fill="' + MUTED + '"/>'
+      + '<rect x="7" y="1.5" width="8.1" height="1.6" fill="' + MUTED + '"/>'
+      + '</svg>';
+  }
+  function xGlyph(color, size) {
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 12 12" aria-hidden="true">'
+      + '<rect x="2" y="5.2" width="8" height="1.6" rx="0.8" fill="' + color + '" transform="rotate(45 6 6)"/>'
+      + '<rect x="2" y="5.2" width="8" height="1.6" rx="0.8" fill="' + color + '" transform="rotate(-45 6 6)"/>'
       + '</svg>';
   }
   function ensureHost() {
@@ -107,188 +110,135 @@
     }
     window.location.href = url;
   }
-  function copyText(value, done) {
-    function fallback() {
-      try {
-        var ta = document.createElement('textarea');
-        ta.value = value;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        done(true);
-      } catch (e) {
-        done(false);
-      }
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(value).then(function () {
-        done(true);
-      }, fallback);
-    } else {
-      fallback();
-    }
-  }
   function styleText() {
     return ''
       + '.rg-stack{width:360px;max-width:calc(100vw - 32px);font-family:' + FONT + ';}'
-      + '.rg-card{min-width:280px;max-width:380px;display:flex;align-items:center;gap:12px;'
-      + 'padding:12px 16px;border-radius:12px;border:1px solid ' + BORDER + ';background:' + CARD_BG + ';'
-      + 'animation:rg-in 180ms ease-out;}'
+      + '.rg-stack,.rg-stack *{box-sizing:border-box;}'
+      + '.rg-card{min-width:280px;max-width:380px;border-radius:12px;border:1px solid ' + BORDER + ';'
+      + 'background:' + CARD_BG + ';animation:rg-in 180ms ease-out;}'
       + '@keyframes rg-in{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}'
-      + '.rg-glyph{flex:none;display:flex;}'
-      + '.rg-main{flex:1;min-width:0;}'
-      + '.rg-title{margin:0;font-size:13.5px;font-weight:600;color:' + TITLE + ';'
-      + 'overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}'
-      + '.rg-desc{margin:2px 0 0;font-size:12px;color:' + MUTED + ';'
-      + 'overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}'
-      + '.rg-actions{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;}'
-      + '.rg-btn{height:30px;padding:0 12px;border-radius:6px;border:1px solid ' + BORDER + ';'
-      + 'background:transparent;color:' + FOREGROUND + ';font-family:' + FONT + ';font-size:13px;font-weight:500;'
-      + 'white-space:nowrap;cursor:pointer;}'
-      + '.rg-btn:hover{background:' + BORDER + ';}'
-      + '.rg-btn:focus-visible{outline:none;border-color:' + PRIMARY + ';}'
-      + '.rg-close{flex:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center;'
-      + 'border-radius:6px;border:none;background:transparent;cursor:pointer;}'
-      + '.rg-close:hover{background:' + BORDER + ';}'
-      + '.rg-close:focus-visible{outline:none;border:1px solid ' + PRIMARY + ';}'
-      + '.rg-panel{min-width:280px;max-width:380px;border-radius:12px;border:1px solid ' + BORDER + ';'
-      + 'background:' + PANEL_BG + ';padding:12px 12px 8px;animation:rg-in 180ms ease-out;}'
-      + '.rg-panel-head{display:flex;align-items:center;gap:8px;padding:0 4px 8px;}'
-      + '.rg-panel-title{margin:0;flex:1;font-size:13.5px;font-weight:600;color:' + TITLE + ';}'
-      + '.rg-row{display:flex;align-items:center;gap:10px;padding:6px 4px;border-radius:6px;}'
-      + '.rg-row:hover{background:' + ROW_HOVER + ';}'
-      + '.rg-art{width:40px;height:40px;border-radius:5px;object-fit:cover;flex:none;background:' + BORDER + ';}'
-      + '.rg-row-main{flex:1;min-width:0;}'
-      + '.rg-row-title{margin:0;font-size:12.5px;font-weight:500;color:' + FOREGROUND + ';'
+      + '.rg-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid ' + BORDER + ';}'
+      + '.rg-logo{width:18px;height:18px;border-radius:4px;flex:none;}'
+      + '.rg-logo-fallback{width:18px;height:18px;border-radius:4px;flex:none;background:' + PRIMARY + ';'
+      + 'color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;}'
+      + '.rg-brand{margin:0;font-size:13px;font-weight:600;color:' + FOREGROUND + ';}'
+      + '.rg-x{margin-left:auto;width:24px;height:24px;flex:none;display:flex;align-items:center;justify-content:center;'
+      + 'border-radius:5px;border:1px solid transparent;background:transparent;cursor:pointer;padding:0;}'
+      + '.rg-x:focus-visible{outline:none;border-color:' + PRIMARY + ';}'
+      + '.rg-x .rg-x-hover{display:none;}'
+      + '.rg-x:hover .rg-x-idle{display:none;}'
+      + '.rg-x:hover .rg-x-hover{display:block;}'
+      + '.rg-center{padding:10px 12px;}'
+      + '.rg-trow{display:flex;align-items:center;gap:9px;padding:6px;border-radius:6px;'
+      + 'border:1px solid transparent;cursor:pointer;}'
+      + '.rg-trow:hover{background:' + ROW_HOVER_BG + ';border-color:' + BORDER + ';}'
+      + '.rg-art{width:40px;height:40px;flex:none;object-fit:cover;border-radius:5px;border:1px solid ' + BORDER + ';background:' + ART_BG + ';}'
+      + '.rg-art-fallback{width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center;'
+      + 'border-radius:5px;border:1px solid ' + BORDER + ';background:' + ART_BG + ';}'
+      + '.rg-tcol{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}'
+      + '.rg-ttitle{margin:0;font-size:12.5px;font-weight:500;color:' + FOREGROUND + ';'
       + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
-      + '.rg-row-sub{margin:1px 0 0;font-size:11.5px;color:' + MUTED + ';'
-      + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}';
+      + '.rg-tartist{margin:0;font-size:11.5px;color:' + MUTED + ';'
+      + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+      + '.rg-prov{flex:none;display:flex;align-items:center;}'
+      + '.rg-hrow{display:flex;align-items:center;gap:16px;}'
+      + '.rg-hart{width:76px;height:76px;flex:none;object-fit:cover;border-radius:6px;border:1px solid ' + BORDER + ';background:' + ART_BG + ';}'
+      + '.rg-hart-fallback{width:76px;height:76px;flex:none;display:flex;align-items:center;justify-content:center;'
+      + 'border-radius:6px;border:1px solid ' + BORDER + ';background:' + ART_BG + ';}'
+      + '.rg-hcol{flex:1;min-width:0;display:flex;align-items:center;gap:10px;}'
+      + '.rg-htext{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;}'
+      + '.rg-htitle{margin:0;font-size:18px;line-height:22.5px;font-weight:600;color:' + FOREGROUND + ';'
+      + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+      + '.rg-hmeta{margin:0;font-size:11.5px;color:' + MUTED + ';'
+      + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+      + '.rg-provcol{flex:none;display:flex;align-items:center;gap:5px;margin-top:2px;}'
+      + '.rg-provlabel{font-size:11.5px;font-weight:500;}'
+      + '.rg-foot{display:flex;gap:6px;padding:2px 12px 12px;}'
+      + '.rg-primary{flex:1;height:34px;padding:0 13px;border-radius:6px;border:1px solid #818cf8c2;background:' + PRIMARY + ';'
+      + 'color:' + FOREGROUND + ';font-family:' + FONT + ';font-size:13px;font-weight:600;cursor:pointer;'
+      + 'display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;}'
+      + '.rg-primary:hover{background:#5558e8;border-color:#a5b4fc;}'
+      + '.rg-primary:focus-visible{outline:none;border-color:' + PRIMARY + ';}'
+      + '.rg-secondary{height:34px;padding:0 13px;border-radius:6px;border:1px solid ' + BORDER + ';background:transparent;'
+      + 'color:' + FOREGROUND + ';font-family:' + FONT + ';font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;}'
+      + '.rg-secondary:hover{background:' + BORDER + ';}'
+      + '.rg-secondary:focus-visible{outline:none;border-color:' + PRIMARY + ';}';
   }
-  function actionButtons(entity, related, primaryUrl) {
-    var buttons = [];
-    var mainLabel = entity.type === 'track' ? 'Play' : 'Open';
-    buttons.push({ label: mainLabel, url: primaryUrl });
+  function headerHtml() {
+    var logo = logoUrl();
+    var logoHtml = logo
+      ? '<img class="rg-logo" src="' + esc(logo) + '" alt=""/>'
+      : '<span class="rg-logo-fallback">R</span>';
+    return '<div class="rg-head">' + logoHtml
+      + '<p class="rg-brand">ralgruM</p>'
+      + '<button class="rg-x" data-rg-x="1" aria-label="Dismiss notification">'
+      + '<span class="rg-x-idle">' + xGlyph(MUTED, 9) + '</span>'
+      + '<span class="rg-x-hover">' + xGlyph(TITLE, 9) + '</span>'
+      + '</button></div>';
+  }
+  function centerTrackHtml(entity, meta) {
+    var title = (meta && meta.title) || entity.title || 'Unknown track';
+    var artist = (meta && meta.subtitle) || '';
+    var artwork = (meta && meta.artwork) || '';
+    var artHtml = artwork
+      ? '<img class="rg-art" src="' + esc(artwork) + '" alt=""/>'
+      : '<span class="rg-art-fallback">' + musicGlyph() + '</span>';
+    return '<div class="rg-trow" data-rg-play="1" role="button" aria-label="Play in ralgruM">'
+      + artHtml
+      + '<div class="rg-tcol">'
+      + '<p class="rg-ttitle">' + esc(title) + '</p>'
+      + '<p class="rg-tartist">' + esc(artist) + '</p>'
+      + '</div>'
+      + '<span class="rg-prov">' + brandGlyph(accentFor(entity.provider)) + '</span>'
+      + '</div>';
+  }
+  function centerHeaderHtml(entity, meta) {
+    var title = (meta && meta.title) || entity.title || typeName(entity.type);
+    var sub = (meta && meta.subtitle) || '';
+    var artwork = (meta && meta.artwork) || '';
+    var artHtml = artwork
+      ? '<img class="rg-hart" src="' + esc(artwork) + '" alt=""/>'
+      : '<span class="rg-hart-fallback">' + musicGlyph() + '</span>';
+    var color = accentFor(entity.provider);
+    return '<div class="rg-hrow">'
+      + artHtml
+      + '<div class="rg-hcol"><div class="rg-htext">'
+      + '<p class="rg-htitle">' + esc(title) + '</p>'
+      + '<p class="rg-hmeta">' + esc(sub) + '</p>'
+      + '</div></div>'
+      + '<span class="rg-provcol">' + brandGlyph(color)
+      + '<span class="rg-provlabel" style="color:' + color + '">' + esc(providerName(entity.provider)) + '</span>'
+      + '</span>'
+      + '</div>';
+  }
+  function footerHtml(entity, related, primaryUrl) {
+    var html = '<div class="rg-foot">';
+    var mainLabel = entity.type === 'track' ? 'Play in ralgruM' : 'Open in ralgruM';
+    html += '<button class="rg-primary" data-rg-open="' + esc(primaryUrl) + '">' + esc(mainLabel) + '</button>';
     (related || []).slice(0, 2).forEach(function (rel) {
       var url = ralgrumUrlFor(rel, rel.type === 'track' ? 'play' : 'open');
       if (url) {
-        buttons.push({ label: typeName(rel.type), url: url, title: rel.title });
+        html += '<button class="rg-secondary" data-rg-open="' + esc(url) + '">' + esc(typeName(rel.type)) + '</button>';
       }
     });
-    buttons.push({ label: 'Copy link', copy: primaryUrl });
-    buttons.push({ label: 'Dismiss', dismiss: true });
-    return buttons;
+    html += '</div>';
+    return html;
   }
   function render(entity, meta, related) {
     clearHost();
     var host = ensureHost();
     var shadow = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host;
-    var accent = accentFor(entity.provider);
     var action = entity.type === 'track' ? 'play' : 'open';
     var primaryUrl = ralgrumUrlFor(entity, action);
-    var title = (meta && meta.title) || entity.title || (providerName(entity.provider) + ' ' + typeName(entity.type));
-    var sub = (meta && meta.subtitle) || entity.url;
-    var desc = providerName(entity.provider) + ' ' + typeName(entity.type) + ' - ' + sub;
-    var buttons = primaryUrl ? actionButtons(entity, related, primaryUrl) : [{ label: 'Dismiss', dismiss: true }];
+    var center = entity.type === 'track'
+      ? centerTrackHtml(entity, meta)
+      : centerHeaderHtml(entity, meta);
     var html = '<style>' + styleText() + '</style>'
-      + '<div class="rg-stack"><div class="rg-card" role="status">'
-      + '<span class="rg-glyph">' + noteSvg(accent) + '</span>'
-      + '<div class="rg-main">'
-      + '<p class="rg-title">' + esc(title) + '</p>'
-      + '<p class="rg-desc">' + esc(desc) + '</p>'
-      + '<div class="rg-actions">';
-    buttons.forEach(function (b, i) {
-      var attrs = 'class="rg-btn" data-rg-i="' + i + '"';
-      if (b.title) {
-        attrs += ' title="' + esc(b.title) + '"';
-      }
-      html += '<button ' + attrs + '>' + esc(b.label) + '</button>';
-    });
-    html += '</div></div></div></div>';
-    if (shadow.innerHTML !== undefined) {
-      shadow.innerHTML = html;
-    } else {
-      host.innerHTML = html;
-    }
-    var box = shadow.querySelector ? shadow.querySelector('.rg-card') : host;
-    var state = { hovered: false, remaining: LIFETIME, timer: 0 };
-    function onClick(ev) {
-      var t = ev.target;
-      if (!t || !t.getAttribute) {
-        return;
-      }
-      var idx = t.getAttribute('data-rg-i');
-      if (idx === null || idx === undefined) {
-        return;
-      }
-      var b = buttons[Number(idx)];
-      if (!b) {
-        return;
-      }
-      if (b.dismiss) {
-        teardown();
-        clearHost();
-        return;
-      }
-      if (b.copy) {
-        copyText(b.copy, function (ok) {
-          t.textContent = ok ? 'Copied' : 'Copy failed';
-          setTimeout(function () {
-            t.textContent = 'Copy link';
-          }, 1400);
-        });
-        return;
-      }
-      if (b.url) {
-        sendToApp(b.url);
-      }
-    }
-    function teardown() {
-      if (state.timer) {
-        clearInterval(state.timer);
-        state.timer = 0;
-      }
-    }
-    var container = shadow.querySelector ? shadow : host;
-    if (container.addEventListener) {
-      container.addEventListener('click', onClick);
-    }
-    if (box && box.addEventListener) {
-      box.addEventListener('mouseenter', function () {
-        state.hovered = true;
-      });
-      box.addEventListener('mouseleave', function () {
-        state.hovered = false;
-      });
-    }
-    return { teardown: teardown };
-  }
-  function renderDialog(entities) {
-    clearHost();
-    var host = ensureHost();
-    var shadow = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host;
-    var html = '<style>' + styleText() + '</style>'
-      + '<div class="rg-stack"><div class="rg-panel" role="dialog" aria-label="Open in ralgruM">'
-      + '<div class="rg-panel-head">'
-      + '<p class="rg-panel-title">Open in ralgruM</p>'
-      + '<button class="rg-close" data-rg-x="1" aria-label="Dismiss notification">' + xSvg() + '</button>'
-      + '</div>';
-    entities.forEach(function (item, i) {
-      var action = item.entity.type === 'track' ? 'play' : 'open';
-      var url = ralgrumUrlFor(item.entity, action);
-      var label = item.entity.type === 'track' ? 'Play' : 'Open';
-      html += '<div class="rg-row">'
-        + (item.artwork ? '<img class="rg-art" src="' + esc(item.artwork) + '" alt=""/>' : '')
-        + '<div class="rg-row-main">'
-        + '<p class="rg-row-title">' + esc(item.title || item.entity.url) + '</p>'
-        + '<p class="rg-row-sub">' + esc(providerName(item.entity.provider) + ' ' + typeName(item.entity.type)) + '</p>'
-        + '</div>'
-        + (url ? '<button class="rg-btn" data-rg-open="' + esc(url) + '">' + esc(label) + '</button>' : '')
-        + '</div>';
-    });
-    html += '</div></div>';
+      + '<div class="rg-stack"><div class="rg-card" role="dialog" aria-label="Open in ralgruM">'
+      + headerHtml()
+      + '<div class="rg-center">' + center + '</div>'
+      + (primaryUrl ? footerHtml(entity, related, primaryUrl) : '')
+      + '</div></div>';
     if (shadow.innerHTML !== undefined) {
       shadow.innerHTML = html;
     } else {
@@ -297,29 +247,30 @@
     var container = shadow.querySelector ? shadow : host;
     container.addEventListener('click', function (ev) {
       var t = ev.target;
-      if (!t || !t.getAttribute) {
+      if (!t || !t.closest) {
         return;
       }
-      if (t.getAttribute('data-rg-x')) {
+      var x = t.closest('[data-rg-x]');
+      if (x) {
         clearHost();
         return;
       }
-      var url = t.getAttribute('data-rg-open');
-      if (url) {
-        sendToApp(url);
+      var opener = t.closest('[data-rg-open]');
+      if (opener) {
+        sendToApp(opener.getAttribute('data-rg-open'));
+        return;
+      }
+      var player = t.closest('[data-rg-play]');
+      if (player && primaryUrl) {
+        sendToApp(primaryUrl);
       }
     });
   }
-  var live = null;
   function show(entity, meta, related) {
     if (!entity) {
       return false;
     }
-    if (live) {
-      live.teardown();
-      live = null;
-    }
-    live = render(entity, meta, related || []);
+    render(entity, meta, related || []);
     return true;
   }
   function showOncePerPage(entity, meta, related) {
@@ -331,16 +282,12 @@
     return show(entity, meta, related);
   }
   function dismiss() {
-    if (live) {
-      live.teardown();
-      live = null;
-    }
     clearHost();
   }
   root.RalgrumToast = {
     show: show,
     showOncePerPage: showOncePerPage,
-    showDialog: renderDialog,
+    showDialog: show,
     dismiss: dismiss,
     resetForNavigation: dismiss,
     colors: {
