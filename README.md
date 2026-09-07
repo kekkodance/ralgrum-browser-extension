@@ -18,7 +18,9 @@ ralgruM or open the album, playlist, or artist page in ralgruM with one click.
 - Copy ralgruM link or original page link
 - Context menu entries for pages and links
 - Popup with current tab status and quick actions
-- Options page (per provider toggles, auto show, pill mode)
+- Toast mirrors the app toast anatomy (flat card, kind glyph, secondary
+  actions) and the expanded dialog lists entities as track rows
+- Options page (per provider toggles, per type toggles, auto show)
 - Firefox and Chrome builds from one source (Manifest V3)
 - No tracking, everything runs locally in your browser
 

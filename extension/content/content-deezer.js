@@ -84,8 +84,8 @@
     }
     getSettings(function (settings) {
       if (!shouldShow(found.entity, settings)) {
-        if (window.RalgrumToast && settings && settings.autoShow === false) {
-          window.RalgrumToast.showPill(found.entity, found.meta, found.related);
+        if (window.RalgrumToast) {
+          window.RalgrumToast.dismiss();
         }
         return;
       }

@@ -1,33 +1,36 @@
-// RalgrumToast: top right toast and dialog in ralgruM style using Shadow DOM.
-// Colors match the ralgruM GPUI theme (src/ui/theme.rs and src/ui/toast.rs).
-// No chrome APIs required here, background handles protocol navigation.
+// RalgrumToast mirrors src/ui/toast.rs value for value.
+// Card: min 280 max 380, pad 12 vertical 16 horizontal, radius 12,
+// 1px BORDER, flat bg 121214f5, row gap 12, no shadow (theme.shadow=false).
+// Glyph 16 in kind color, title 13.5 semibold white, desc 12 muted,
+// actions h30 secondary buttons, close 28 with 12 glyph, entry 180ms
+// fade plus 8px rise. Action-less toasts auto dismiss in 6s with hover
+// pause; toasts with actions stay until dismissed, like the app.
 (function (root) {
   'use strict';
-  var COLORS = {
-    background: '#09090b',
-    surface: '#121215',
-    surfaceOverlay: '#121215fc',
-    border: '#27272a',
-    foreground: '#fafafa',
-    muted: '#a1a1aa',
-    primary: '#6366f1',
-    deezer: '#a238ff',
-    soundcloud: '#ff5500'
-  };
+  var BORDER = '#27272a';
+  var FOREGROUND = '#fafafa';
+  var TITLE = '#ffffff';
+  var MUTED = '#a1a1aa';
+  var PRIMARY = '#6366f1';
+  var CARD_BG = '#121214f5';
+  var PANEL_BG = '#121215';
+  var ROW_HOVER = '#18181b';
+  var DEEZER = '#a238ff';
+  var SOUNDCLOUD = '#ff5500';
+  var FONT = '"Segoe UI", system-ui, -apple-system, sans-serif';
+  var LIFETIME = 6000;
+  var TICK = 250;
   var SHOWN_KEYS = {};
-  var STATE = { minimized: false, lastEntity: null, lastMeta: null };
-
-  function providerColor(provider) {
+  function accentFor(provider) {
     if (provider === 'deezer') {
-      return COLORS.deezer;
+      return DEEZER;
     }
     if (provider === 'soundcloud') {
-      return COLORS.soundcloud;
+      return SOUNDCLOUD;
     }
-    return COLORS.primary;
+    return PRIMARY;
   }
-
-  function providerLabel(provider) {
+  function providerName(provider) {
     if (provider === 'deezer') {
       return 'Deezer';
     }
@@ -36,11 +39,7 @@
     }
     return 'ralgruM';
   }
-
-  function typeLabel(type) {
-    if (type === 'track') {
-      return 'Track';
-    }
+  function typeName(type) {
     if (type === 'album') {
       return 'Album';
     }
@@ -50,9 +49,8 @@
     if (type === 'artist') {
       return 'Artist';
     }
-    return 'Page';
+    return 'Track';
   }
-
   function esc(value) {
     return String(value == null ? '' : value)
       .replace(/&/g, '&amp;')
@@ -60,7 +58,21 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
   }
-
+  function noteSvg(color) {
+    return '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">'
+      + '<circle cx="5" cy="12" r="2.6" fill="' + color + '"/>'
+      + '<circle cx="11.5" cy="10.5" r="2.6" fill="' + color + '"/>'
+      + '<rect x="7" y="1.5" width="1.6" height="9" fill="' + color + '"/>'
+      + '<rect x="13.5" y="1.5" width="1.6" height="7" fill="' + color + '"/>'
+      + '<rect x="7" y="1.5" width="8.1" height="1.6" fill="' + color + '"/>'
+      + '</svg>';
+  }
+  function xSvg() {
+    return '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">'
+      + '<rect x="2" y="5.2" width="8" height="1.6" rx="0.8" fill="' + MUTED + '" transform="rotate(45 6 6)"/>'
+      + '<rect x="2" y="5.2" width="8" height="1.6" rx="0.8" fill="' + MUTED + '" transform="rotate(-45 6 6)"/>'
+      + '</svg>';
+  }
   function ensureHost() {
     var host = document.querySelector('.ralgrum-toast-host');
     if (!host) {
@@ -70,48 +82,19 @@
     }
     return host;
   }
-
-  function removeHost() {
+  function clearHost() {
     var host = document.querySelector('.ralgrum-toast-host');
     if (host && host.parentNode) {
       host.parentNode.removeChild(host);
     }
-    var pill = document.querySelector('.ralgrum-toast-pill');
-    if (pill && pill.parentNode) {
-      pill.parentNode.removeChild(pill);
-    }
   }
-
-  function primaryLabelFor(entity) {
-    if (!entity) {
-      return 'Open in ralgruM';
-    }
-    if (entity.type === 'track') {
-      return 'Play in ralgruM';
-    }
-    return 'Open in ralgruM';
-  }
-
-  function buildRalgrumUrl(entity, action) {
+  function ralgrumUrlFor(entity, action) {
     if (root.RalgrumDetectors && root.RalgrumDetectors.buildRalgrumUrl) {
       return root.RalgrumDetectors.buildRalgrumUrl(entity, { action: action });
     }
-    var p = new URLSearchParams();
-    p.set('provider', entity.provider);
-    p.set('type', entity.type);
-    if (entity.id) {
-      p.set('id', entity.id);
-    }
-    p.set('action', action || 'open');
-    p.set('url', entity.url);
-    return 'ralgrum://open?' + p.toString();
+    return null;
   }
-
-  function openInRalgrum(entity, action) {
-    var url = buildRalgrumUrl(entity, action);
-    if (!url) {
-      return;
-    }
+  function sendToApp(url) {
     try {
       if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
         chrome.runtime.sendMessage({ type: 'RALGRUM_OPEN', url: url }, function () {
@@ -124,7 +107,6 @@
     }
     window.location.href = url;
   }
-
   function copyText(value, done) {
     function fallback() {
       try {
@@ -136,193 +118,210 @@
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
-        if (done) {
-          done(true);
-        }
+        done(true);
       } catch (e) {
-        if (done) {
-          done(false);
-        }
+        done(false);
       }
     }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(value).then(function () {
-        if (done) {
-          done(true);
-        }
+        done(true);
       }, fallback);
     } else {
       fallback();
     }
   }
-
-  function relatedLinks(entity, related) {
-    if (!related || related.length === 0) {
-      return '';
-    }
-    var items = related.slice(0, 3).map(function (rel) {
-      var url = buildRalgrumUrl(rel, rel.type === 'track' ? 'play' : 'open');
-      return '<button class="rg-link" data-rg-url="' + esc(url) + '">'
-        + esc(typeLabel(rel.type)) + ': ' + esc(rel.title || rel.id || rel.url)
-        + '</button>';
-    });
-    return '<div class="rg-related">' + items.join('') + '</div>';
+  function styleText() {
+    return ''
+      + '.rg-stack{width:360px;max-width:calc(100vw - 32px);font-family:' + FONT + ';}'
+      + '.rg-card{min-width:280px;max-width:380px;display:flex;align-items:center;gap:12px;'
+      + 'padding:12px 16px;border-radius:12px;border:1px solid ' + BORDER + ';background:' + CARD_BG + ';'
+      + 'animation:rg-in 180ms ease-out;}'
+      + '@keyframes rg-in{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}'
+      + '.rg-glyph{flex:none;display:flex;}'
+      + '.rg-main{flex:1;min-width:0;}'
+      + '.rg-title{margin:0;font-size:13.5px;font-weight:600;color:' + TITLE + ';'
+      + 'overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}'
+      + '.rg-desc{margin:2px 0 0;font-size:12px;color:' + MUTED + ';'
+      + 'overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}'
+      + '.rg-actions{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;}'
+      + '.rg-btn{height:30px;padding:0 12px;border-radius:6px;border:1px solid ' + BORDER + ';'
+      + 'background:transparent;color:' + FOREGROUND + ';font-family:' + FONT + ';font-size:13px;font-weight:500;'
+      + 'white-space:nowrap;cursor:pointer;}'
+      + '.rg-btn:hover{background:' + BORDER + ';}'
+      + '.rg-btn:focus-visible{outline:none;border-color:' + PRIMARY + ';}'
+      + '.rg-close{flex:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center;'
+      + 'border-radius:6px;border:none;background:transparent;cursor:pointer;}'
+      + '.rg-close:hover{background:' + BORDER + ';}'
+      + '.rg-close:focus-visible{outline:none;border:1px solid ' + PRIMARY + ';}'
+      + '.rg-panel{min-width:280px;max-width:380px;border-radius:12px;border:1px solid ' + BORDER + ';'
+      + 'background:' + PANEL_BG + ';padding:12px 12px 8px;animation:rg-in 180ms ease-out;}'
+      + '.rg-panel-head{display:flex;align-items:center;gap:8px;padding:0 4px 8px;}'
+      + '.rg-panel-title{margin:0;flex:1;font-size:13.5px;font-weight:600;color:' + TITLE + ';}'
+      + '.rg-row{display:flex;align-items:center;gap:10px;padding:6px 4px;border-radius:6px;}'
+      + '.rg-row:hover{background:' + ROW_HOVER + ';}'
+      + '.rg-art{width:40px;height:40px;border-radius:5px;object-fit:cover;flex:none;background:' + BORDER + ';}'
+      + '.rg-row-main{flex:1;min-width:0;}'
+      + '.rg-row-title{margin:0;font-size:12.5px;font-weight:500;color:' + FOREGROUND + ';'
+      + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+      + '.rg-row-sub{margin:1px 0 0;font-size:11.5px;color:' + MUTED + ';'
+      + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}';
   }
-
+  function actionButtons(entity, related, primaryUrl) {
+    var buttons = [];
+    var mainLabel = entity.type === 'track' ? 'Play' : 'Open';
+    buttons.push({ label: mainLabel, url: primaryUrl });
+    (related || []).slice(0, 2).forEach(function (rel) {
+      var url = ralgrumUrlFor(rel, rel.type === 'track' ? 'play' : 'open');
+      if (url) {
+        buttons.push({ label: typeName(rel.type), url: url, title: rel.title });
+      }
+    });
+    buttons.push({ label: 'Copy link', copy: primaryUrl });
+    buttons.push({ label: 'Dismiss', dismiss: true });
+    return buttons;
+  }
   function render(entity, meta, related) {
-    removeHost();
+    clearHost();
     var host = ensureHost();
     var shadow = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host;
-    var accent = providerColor(entity.provider);
-    var title = (meta && meta.title) || entity.title || (providerLabel(entity.provider) + ' ' + typeLabel(entity.type));
-    var subtitle = (meta && meta.subtitle) || entity.url;
-    var artwork = (meta && meta.artwork) || '';
-    var primaryLabel = primaryLabelFor(entity);
-    var primaryAction = entity.type === 'track' ? 'play' : 'open';
-    var primaryUrl = buildRalgrumUrl(entity, primaryAction);
-    var style = ''
-      + '.rg-card{width:340px;max-width:calc(100vw - 32px);background:' + COLORS.surfaceOverlay + ';'
-      + 'border:1px solid ' + COLORS.border + ';border-radius:12px;color:' + COLORS.foreground + ';'
-      + 'font-family:"Segoe UI",system-ui,-apple-system,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.55);'
-      + 'overflow:hidden;animation:rg-in .22s ease-out}'
-      + '@keyframes rg-in{from{transform:translateX(16px);opacity:0}to{transform:none;opacity:1}}'
-      + '.rg-top{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid ' + COLORS.border + ';}'
-      + '.rg-dot{width:10px;height:10px;border-radius:999px;background:' + COLORS.primary + ';}'
-      + '.rg-brand{font-size:12px;font-weight:700;letter-spacing:.04em;}'
-      + '.rg-badge{margin-left:auto;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;color:#fff;background:' + accent + ';}'
-      + '.rg-type{font-size:11px;color:' + COLORS.muted + ';border:1px solid ' + COLORS.border + ';padding:3px 8px;border-radius:999px;}'
-      + '.rg-close{border:1px solid ' + COLORS.border + ';background:transparent;color:' + COLORS.muted + ';'
-      + 'width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:14px;line-height:1;}'
-      + '.rg-close:hover{color:' + COLORS.foreground + ';border-color:' + COLORS.primary + ';}'
-      + '.rg-body{display:flex;gap:12px;padding:12px;}'
-      + '.rg-art{width:56px;height:56px;border-radius:8px;object-fit:cover;background:' + COLORS.background + ';border:1px solid ' + COLORS.border + ';flex:none;}'
-      + '.rg-art-fallback{width:56px;height:56px;border-radius:8px;background:linear-gradient(135deg,' + accent + ',' + COLORS.primary + ');'
-      + 'display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;color:#fff;flex:none;}'
-      + '.rg-title{font-size:14px;font-weight:650;margin:0 0 4px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}'
-      + '.rg-sub{font-size:12.5px;color:' + COLORS.muted + ';margin:0;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}'
-      + '.rg-actions{display:flex;gap:8px;padding:0 12px 10px;}'
-      + '.rg-primary{flex:1;height:32px;border-radius:8px;border:1px solid ' + COLORS.primary + ';background:' + COLORS.primary + ';color:#fff;'
-      + 'font-size:13px;font-weight:700;cursor:pointer;}'
-      + '.rg-primary:hover{filter:brightness(1.08);}'
-      + '.rg-secondary{height:32px;border-radius:8px;border:1px solid ' + COLORS.border + ';background:transparent;color:' + COLORS.foreground + ';'
-      + 'font-size:12.5px;font-weight:600;padding:0 10px;cursor:pointer;}'
-      + '.rg-secondary:hover{border-color:' + COLORS.primary + ';}'
-      + '.rg-related{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 12px;}'
-      + '.rg-link{font-size:11.5px;color:' + COLORS.foreground + ';background:transparent;border:1px solid ' + COLORS.border + ';'
-      + 'border-radius:999px;padding:4px 9px;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}'
-      + '.rg-link:hover{border-color:' + accent + ';}'
-      + '.rg-foot{padding:0 12px 12px;font-size:11px;color:' + COLORS.muted + ';}';
-    var artHtml = artwork
-      ? '<img class="rg-art" src="' + esc(artwork) + '" alt="" />'
-      : '<div class="rg-art-fallback">R</div>';
-    var html = ''
-      + '<style>' + style + '</style>'
-      + '<div class="rg-card" role="dialog" aria-label="Open in ralgruM">'
-      + '<div class="rg-top"><span class="rg-dot"></span><span class="rg-brand">ralgruM</span>'
-      + '<span class="rg-badge">' + esc(providerLabel(entity.provider)) + '</span>'
-      + '<span class="rg-type">' + esc(typeLabel(entity.type)) + '</span>'
-      + '<button class="rg-close" data-rg-act="close" aria-label="Dismiss">x</button></div>'
-      + '<div class="rg-body">' + artHtml
-      + '<div><p class="rg-title">' + esc(title) + '</p><p class="rg-sub">' + esc(subtitle) + '</p></div></div>'
-      + '<div class="rg-actions">'
-      + '<button class="rg-primary" data-rg-act="primary">' + esc(primaryLabel) + '</button>'
-      + '<button class="rg-secondary" data-rg-act="copy">Copy link</button>'
-      + '<button class="rg-secondary" data-rg-act="min">Later</button>'
-      + '</div>'
-      + relatedLinks(entity, related)
-      + '<div class="rg-foot">Opens directly in your ralgruM desktop app.</div>'
-      + '</div>';
+    var accent = accentFor(entity.provider);
+    var action = entity.type === 'track' ? 'play' : 'open';
+    var primaryUrl = ralgrumUrlFor(entity, action);
+    var title = (meta && meta.title) || entity.title || (providerName(entity.provider) + ' ' + typeName(entity.type));
+    var sub = (meta && meta.subtitle) || entity.url;
+    var desc = providerName(entity.provider) + ' ' + typeName(entity.type) + ' - ' + sub;
+    var buttons = primaryUrl ? actionButtons(entity, related, primaryUrl) : [{ label: 'Dismiss', dismiss: true }];
+    var html = '<style>' + styleText() + '</style>'
+      + '<div class="rg-stack"><div class="rg-card" role="status">'
+      + '<span class="rg-glyph">' + noteSvg(accent) + '</span>'
+      + '<div class="rg-main">'
+      + '<p class="rg-title">' + esc(title) + '</p>'
+      + '<p class="rg-desc">' + esc(desc) + '</p>'
+      + '<div class="rg-actions">';
+    buttons.forEach(function (b, i) {
+      var attrs = 'class="rg-btn" data-rg-i="' + i + '"';
+      if (b.title) {
+        attrs += ' title="' + esc(b.title) + '"';
+      }
+      html += '<button ' + attrs + '>' + esc(b.label) + '</button>';
+    });
+    html += '</div></div></div></div>';
     if (shadow.innerHTML !== undefined) {
       shadow.innerHTML = html;
     } else {
       host.innerHTML = html;
     }
+    var box = shadow.querySelector ? shadow.querySelector('.rg-card') : host;
+    var state = { hovered: false, remaining: LIFETIME, timer: 0 };
     function onClick(ev) {
       var t = ev.target;
       if (!t || !t.getAttribute) {
         return;
       }
-      if (t.getAttribute('data-rg-url')) {
-        var u = t.getAttribute('data-rg-url');
-        try {
-          if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-            chrome.runtime.sendMessage({ type: 'RALGRUM_OPEN', url: u });
-          } else {
-            window.location.href = u;
-          }
-        } catch (e) {
-          window.location.href = u;
-        }
+      var idx = t.getAttribute('data-rg-i');
+      if (idx === null || idx === undefined) {
         return;
       }
-      var act = t.getAttribute('data-rg-act');
-      if (act === 'close') {
-        removeHost();
-      } else if (act === 'min') {
-        showPill(entity, meta, related);
-      } else if (act === 'primary') {
-        openInRalgrum(entity, primaryAction);
-      } else if (act === 'copy') {
-        copyText(primaryUrl, function (ok) {
+      var b = buttons[Number(idx)];
+      if (!b) {
+        return;
+      }
+      if (b.dismiss) {
+        teardown();
+        clearHost();
+        return;
+      }
+      if (b.copy) {
+        copyText(b.copy, function (ok) {
           t.textContent = ok ? 'Copied' : 'Copy failed';
-          setTimeout(function () { t.textContent = 'Copy link'; }, 1400);
+          setTimeout(function () {
+            t.textContent = 'Copy link';
+          }, 1400);
         });
+        return;
+      }
+      if (b.url) {
+        sendToApp(b.url);
+      }
+    }
+    function teardown() {
+      if (state.timer) {
+        clearInterval(state.timer);
+        state.timer = 0;
       }
     }
     var container = shadow.querySelector ? shadow : host;
     if (container.addEventListener) {
       container.addEventListener('click', onClick);
-    } else {
-      host.addEventListener('click', onClick);
     }
+    if (box && box.addEventListener) {
+      box.addEventListener('mouseenter', function () {
+        state.hovered = true;
+      });
+      box.addEventListener('mouseleave', function () {
+        state.hovered = false;
+      });
+    }
+    return { teardown: teardown };
   }
-
-  function showPill(entity, meta, related) {
-    removeHost();
-    var pill = document.createElement('div');
-    pill.className = 'ralgrum-toast-pill';
-    var shadow = pill.attachShadow ? pill.attachShadow({ mode: 'open' }) : pill;
-    var accent = providerColor(entity.provider);
-    var style = ''
-      + '.rg-pill{display:flex;align-items:center;gap:8px;background:' + COLORS.surfaceOverlay + ';'
-      + 'border:1px solid ' + COLORS.border + ';border-radius:999px;padding:7px 8px 7px 10px;color:' + COLORS.foreground + ';'
-      + 'font-family:"Segoe UI",system-ui,sans-serif;font-size:12.5px;font-weight:650;cursor:pointer;'
-      + 'box-shadow:0 8px 28px rgba(0,0,0,.5);}'
-      + '.rg-pill-dot{width:9px;height:9px;border-radius:999px;background:' + accent + ';}'
-      + '.rg-pill-x{border:1px solid ' + COLORS.border + ';background:transparent;color:' + COLORS.muted + ';'
-      + 'border-radius:999px;width:22px;height:22px;cursor:pointer;font-size:12px;}';
-    var html = '<style>' + style + '</style>'
-      + '<div class="rg-pill" role="button" aria-label="Show ralgruM actions">'
-      + '<span class="rg-pill-dot"></span><span>Open in ralgruM</span>'
-      + '<button class="rg-pill-x" data-rg-act="x" aria-label="Dismiss">x</button></div>';
+  function renderDialog(entities) {
+    clearHost();
+    var host = ensureHost();
+    var shadow = host.attachShadow ? host.attachShadow({ mode: 'open' }) : host;
+    var html = '<style>' + styleText() + '</style>'
+      + '<div class="rg-stack"><div class="rg-panel" role="dialog" aria-label="Open in ralgruM">'
+      + '<div class="rg-panel-head">'
+      + '<p class="rg-panel-title">Open in ralgruM</p>'
+      + '<button class="rg-close" data-rg-x="1" aria-label="Dismiss notification">' + xSvg() + '</button>'
+      + '</div>';
+    entities.forEach(function (item, i) {
+      var action = item.entity.type === 'track' ? 'play' : 'open';
+      var url = ralgrumUrlFor(item.entity, action);
+      var label = item.entity.type === 'track' ? 'Play' : 'Open';
+      html += '<div class="rg-row">'
+        + (item.artwork ? '<img class="rg-art" src="' + esc(item.artwork) + '" alt=""/>' : '')
+        + '<div class="rg-row-main">'
+        + '<p class="rg-row-title">' + esc(item.title || item.entity.url) + '</p>'
+        + '<p class="rg-row-sub">' + esc(providerName(item.entity.provider) + ' ' + typeName(item.entity.type)) + '</p>'
+        + '</div>'
+        + (url ? '<button class="rg-btn" data-rg-open="' + esc(url) + '">' + esc(label) + '</button>' : '')
+        + '</div>';
+    });
+    html += '</div></div>';
     if (shadow.innerHTML !== undefined) {
       shadow.innerHTML = html;
     } else {
-      pill.innerHTML = html;
+      host.innerHTML = html;
     }
-    document.documentElement.appendChild(pill);
-    var container = shadow.querySelector ? shadow : pill;
+    var container = shadow.querySelector ? shadow : host;
     container.addEventListener('click', function (ev) {
       var t = ev.target;
-      if (t && t.getAttribute && t.getAttribute('data-rg-act') === 'x') {
-        ev.stopPropagation();
-        removeHost();
+      if (!t || !t.getAttribute) {
         return;
       }
-      render(entity, meta, related);
+      if (t.getAttribute('data-rg-x')) {
+        clearHost();
+        return;
+      }
+      var url = t.getAttribute('data-rg-open');
+      if (url) {
+        sendToApp(url);
+      }
     });
   }
-
+  var live = null;
   function show(entity, meta, related) {
     if (!entity) {
       return false;
     }
-    STATE.lastEntity = entity;
-    STATE.lastMeta = meta || null;
-    render(entity, meta, related || []);
+    if (live) {
+      live.teardown();
+      live = null;
+    }
+    live = render(entity, meta, related || []);
     return true;
   }
-
   function showOncePerPage(entity, meta, related) {
     var key = String(entity.provider) + ':' + String(entity.type) + ':' + String(entity.id || entity.url);
     if (SHOWN_KEYS[key]) {
@@ -331,17 +330,26 @@
     SHOWN_KEYS[key] = true;
     return show(entity, meta, related);
   }
-
-  function resetForNavigation() {
-    removeHost();
+  function dismiss() {
+    if (live) {
+      live.teardown();
+      live = null;
+    }
+    clearHost();
   }
-
   root.RalgrumToast = {
     show: show,
     showOncePerPage: showOncePerPage,
-    showPill: showPill,
-    dismiss: removeHost,
-    resetForNavigation: resetForNavigation,
-    colors: COLORS
+    showDialog: renderDialog,
+    dismiss: dismiss,
+    resetForNavigation: dismiss,
+    colors: {
+      border: BORDER,
+      foreground: FOREGROUND,
+      muted: MUTED,
+      primary: PRIMARY,
+      deezer: DEEZER,
+      soundcloud: SOUNDCLOUD
+    }
   };
 })(typeof window !== 'undefined' ? window : globalThis);

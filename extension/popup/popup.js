@@ -29,6 +29,12 @@
       return null;
     }
   }
+  function providerName(p) {
+    return p === 'deezer' ? 'Deezer' : 'SoundCloud';
+  }
+  function typeName(t) {
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
   function build(entity) {
     var act = entity.type === 'track' ? 'play' : 'open';
     var p = new URLSearchParams();
@@ -45,24 +51,32 @@
     document.getElementById('status').textContent = msg || '';
   }
   function run(tabUrl) {
+    // Dev preview only: file:// and http:// preview pages can pass ?demo=1
+    // to render the ready state. Extension pages run under
+    // chrome-extension:// so this never triggers in production.
+    if (location.protocol === 'file:' || location.protocol === 'http:') {
+      try {
+        if (new URLSearchParams(location.search).get('demo') === '1') {
+          tabUrl = 'https://www.deezer.com/track/3135556';
+        }
+      } catch (e) {
+        // ignore malformed query
+      }
+    }
     var entity = parseDeezer(tabUrl) || parseSoundcloud(tabUrl);
-    var badge = document.getElementById('provider');
     var title = document.getElementById('title');
     var sub = document.getElementById('sub');
     var openBtn = document.getElementById('open');
     var copyBtn = document.getElementById('copy');
     var copyOrig = document.getElementById('copyOrig');
     if (!entity) {
-      badge.textContent = 'no match';
       title.textContent = 'Not a supported page';
       sub.textContent = 'Open a Deezer or SoundCloud track, album, playlist, or artist page.';
       setStatus('Nothing to send to ralgruM from this tab.');
       return;
     }
     var built = build(entity);
-    badge.textContent = entity.provider === 'deezer' ? 'Deezer' : 'SoundCloud';
-    badge.className = 'badge ' + entity.provider;
-    title.textContent = entity.type.charAt(0).toUpperCase() + entity.type.slice(1) + (entity.id ? ' ' + entity.id : '');
+    title.textContent = providerName(entity.provider) + ' ' + typeName(entity.type) + (entity.id ? ' ' + entity.id : '');
     sub.textContent = tabUrl;
     openBtn.disabled = false;
     copyBtn.disabled = false;
@@ -97,7 +111,7 @@
         setStatus('Copy failed in this browser.');
       });
     };
-    setStatus('Ready: ' + built.link.slice(0, 90) + (built.link.length > 90 ? '...' : ''));
+    setStatus('Ready.');
   }
   document.addEventListener('DOMContentLoaded', function () {
     try {
