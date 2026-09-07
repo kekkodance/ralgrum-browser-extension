@@ -47,7 +47,7 @@
     var title = getMeta('og:title') || getMeta('twitter:title') || document.title || '';
     var artwork = getMeta('og:image') || getMeta('twitter:image') || '';
     var audioArtist = getMeta('og:audio:artist') || '';
-    var subtitle = audioArtist || pageUrl;
+    var subtitle = audioArtist;
     return { entity: entity, meta: { title: title, subtitle: subtitle, artwork: artwork }, related: [] };
   }
   function shouldShow(entity, settings) {

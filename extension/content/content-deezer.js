@@ -17,8 +17,8 @@
     }
     var title = getMeta('og:title') || document.title || '';
     var artwork = getMeta('og:image') || detectors.deezerArtworkFor(entity);
-    var performer = getMeta('music:musician') || '';
-    var subtitle = performer || window.location.href;
+    var performer = getMeta('music:musician') || getMeta('og:audio:artist') || '';
+    var subtitle = performer;
     var related = [];
     try {
       var stateEl = document.getElementById('__DZR_APP_STATE__');

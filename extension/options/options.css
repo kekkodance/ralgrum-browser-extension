@@ -4,8 +4,8 @@ with 12.5px copy, 18181bb8 cards at radius 8 with 13px card headings,
 :root { color-scheme: dark; }
 body { margin: 0; background: #09090b; color: #fafafa; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
 body.is-popup { width: 340px; }
-.set-wrap { padding: 16px; }
-body.is-page .set-wrap { max-width: 560px; padding: 20px; }
+.set-wrap { padding: 12px; }
+body.is-page .set-wrap { max-width: 560px; padding: 16px; }
 .set-head { display: flex; flex-direction: column; gap: 4px; margin: 0 0 14px; }
 .set-title { margin: 0; font-size: 15px; font-weight: 600; color: #fafafa; }
 .set-copy { margin: 0; font-size: 12.5px; line-height: 18.75px; color: #a1a1aa; }

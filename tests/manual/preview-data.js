@@ -16,9 +16,10 @@
   var params = new URLSearchParams(location.search);
   var view = params.get('view') || 'toast';
   function demoToast() {
+    var noSub = params.get('nosub') === '1';
     return RalgrumToast.show(
       { provider: 'deezer', type: 'track', id: '3135556', url: 'https://www.deezer.com/track/3135556' },
-      { title: 'Harder Better Faster Stronger', subtitle: 'Daft Punk - Discovery', artwork: ART },
+      { title: 'Harder Better Faster Stronger', subtitle: noSub ? '' : 'Daft Punk - Discovery', artwork: ART },
       [
         { provider: 'deezer', type: 'album', id: '302127', url: 'https://www.deezer.com/album/302127', title: 'Discovery' },
         { provider: 'deezer', type: 'artist', id: '27', url: 'https://www.deezer.com/artist/27', title: 'Daft Punk' }
@@ -99,6 +100,14 @@
         var secs = shadow.querySelectorAll('.rg-secondary');
         out.secondaries = secs.length;
         out.primaryText = shadow.querySelector('.rg-primary').textContent;
+        out.artistPresent = !!shadow.querySelector('.rg-tartist');
+        out.xSize = css('.rg-x', ['width', 'height']);
+        var xg2 = shadow.querySelector('.rg-x svg');
+        out.xGlyph2 = xg2 ? { w: xg2.getBoundingClientRect().width, h: xg2.getBoundingClientRect().height } : null;
+        out.rowBadge = (function () {
+          var g = shadow.querySelector('.rg-prov svg');
+          return g ? { w: g.getBoundingClientRect().width, h: g.getBoundingClientRect().height } : null;
+        })();
       } catch (e) {
         out.error = String(e);
       }
