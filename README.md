@@ -17,6 +17,11 @@ When you are looking at a song, album, playlist, or artist in your browser, a sm
 - Right-click any Deezer or SoundCloud page or link and choose **Open in ralgruM**.
 - Remembers your choices — there is no Save button, everything applies right away.
 
+<div align="center">
+  <img src="screenshots/toast-deezer.png" alt="ralgruM toast on a Deezer song page with a Play in ralgruM button" width="360" />
+  <img src="screenshots/toast-soundcloud.png" alt="ralgruM toast on a SoundCloud song page with a Play in ralgruM button" width="360" />
+</div>
+
 ## Before you start
 
 You need:
@@ -86,14 +91,6 @@ Changes apply immediately.
 - Your on/off settings are saved in your browser and may follow your browser account if you use browser sync. Your browsing history is not saved.
 - Clicking **Play** or **Open** sends that song, album, playlist, or artist to the ralgruM app on your computer. What the app does next is up to the app.
 - The music sites themselves still work exactly as before, these controls only affect the ralgruM box.
-
-## Screenshots
-
-<div align="center">
-  <img src="screenshots/toast-deezer.png" alt="ralgruM toast on a Deezer song page with a Play in ralgruM button" width="360" />
-  <img src="screenshots/toast-soundcloud.png" alt="ralgruM toast on a SoundCloud song page with a Play in ralgruM button" width="360" />
-  <p>The ralgruM box on a Deezer song page (left) and a SoundCloud song page (right).</p>
-</div>
 
 ## For developers
 
