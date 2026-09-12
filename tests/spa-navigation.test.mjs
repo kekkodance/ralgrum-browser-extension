@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { describe, test } from "node:test";
 
-const source = readFileSync(new URL("../extension/content/spa-navigation.js", import.meta.url), "utf8");
+const source = readFileSync(
+  new URL("../extension/content/spa-navigation.js", import.meta.url),
+  "utf8",
+);
 
 function createDomFixture() {
   const observers = new Set();
@@ -15,7 +18,11 @@ function createDomFixture() {
       while (ancestor && ancestor !== target) {
         ancestor = ancestor.parentNode;
       }
-      if (!ancestor || (record.target !== target && !options.subtree) || !options[record.type]) {
+      if (
+        !ancestor ||
+        (record.target !== target && !options.subtree) ||
+        !options[record.type]
+      ) {
         continue;
       }
       if (
@@ -42,12 +49,21 @@ function createDomFixture() {
           child.parentNode = this;
           child.parentElement = this;
           this.childNodes.push(child);
-          queueMutation({ type: "childList", target: this, addedNodes: [child], removedNodes: [] });
+          queueMutation({
+            type: "childList",
+            target: this,
+            addedNodes: [child],
+            removedNodes: [],
+          });
           return child;
         },
         setAttribute(name, value) {
           attributes.set(name, String(value));
-          queueMutation({ type: "attributes", target: this, attributeName: name });
+          queueMutation({
+            type: "attributes",
+            target: this,
+            attributeName: name,
+          });
         },
         closest(selector) {
           if (!/^\.[\w-]+$/.test(selector)) {
@@ -62,7 +78,7 @@ function createDomFixture() {
         },
         hasClass(name) {
           return (attributes.get("class") || "").split(/\s+/).includes(name);
-        }
+        },
       };
     },
     createTextNode(initialData) {
@@ -77,13 +93,17 @@ function createDomFixture() {
         set data(value) {
           data = String(value);
           queueMutation({ type: "characterData", target: this });
-        }
+        },
       };
-    }
+    },
   };
   document.documentElement = document.createElement("html");
-  document.head = document.documentElement.appendChild(document.createElement("head"));
-  document.body = document.documentElement.appendChild(document.createElement("body"));
+  document.head = document.documentElement.appendChild(
+    document.createElement("head"),
+  );
+  document.body = document.documentElement.appendChild(
+    document.createElement("body"),
+  );
 
   return {
     document,
@@ -104,7 +124,7 @@ function createDomFixture() {
           observer.callback(observer.records.splice(0));
         }
       }
-    }
+    },
   };
 }
 
@@ -166,7 +186,9 @@ function loadCoordinator(initialHref) {
   function parseEntity() {
     const url = new URL(href);
     const match = url.pathname.match(/^\/album\/(\d+)\/?$/);
-    return match ? { provider: "deezer", type: "album", id: match[1], url: href } : null;
+    return match
+      ? { provider: "deezer", type: "album", id: match[1], url: href }
+      : null;
   }
   const location = {};
   Object.defineProperty(location, "href", { get: () => href });
@@ -176,7 +198,7 @@ function loadCoordinator(initialHref) {
     },
     replaceState(_state, _title, value) {
       setHref(value);
-    }
+    },
   };
   const document = dom.document;
   const window = {
@@ -186,7 +208,7 @@ function loadCoordinator(initialHref) {
     addEventListener(type, callback) {
       listeners[type] = callback;
     },
-    MutationObserver: dom.MutationObserver
+    MutationObserver: dom.MutationObserver,
   };
   const context = {
     window,
@@ -195,9 +217,11 @@ function loadCoordinator(initialHref) {
     setTimeout: setTimeoutFake,
     clearTimeout: clearTimeoutFake,
     setInterval: setIntervalFake,
-    clearInterval: clearIntervalFake
+    clearInterval: clearIntervalFake,
   };
-  vm.runInNewContext(source, context, { filename: "content/spa-navigation.js" });
+  vm.runInNewContext(source, context, {
+    filename: "content/spa-navigation.js",
+  });
 
   function trigger(type) {
     if (listeners[type]) {
@@ -215,7 +239,7 @@ function loadCoordinator(initialHref) {
     trigger,
     triggerMutation,
     advance,
-    parseEntity
+    parseEntity,
   };
 }
 
@@ -224,12 +248,21 @@ describe("shared SPA navigation", () => {
     const fixture = loadCoordinator("https://www.deezer.com/album/1");
     const api = fixture.api;
     assert.equal(
-      api.entityKey({ provider: "deezer", type: "album", id: "1", url: "https://www.deezer.com/album/1" }),
-      "deezer:album:1"
+      api.entityKey({
+        provider: "deezer",
+        type: "album",
+        id: "1",
+        url: "https://www.deezer.com/album/1",
+      }),
+      "deezer:album:1",
     );
     assert.equal(
-      api.entityKey({ provider: "soundcloud", type: "track", url: "https://SOUNDCLOUD.com/user/song/?utm=1#play" }),
-      "soundcloud:track:soundcloud.com/user/song"
+      api.entityKey({
+        provider: "soundcloud",
+        type: "track",
+        url: "https://SOUNDCLOUD.com/user/song/?utm=1#play",
+      }),
+      "soundcloud:track:soundcloud.com/user/song",
     );
   });
 
@@ -238,10 +271,12 @@ describe("shared SPA navigation", () => {
     const navigations = [];
     const refreshes = [];
     const navApi = fixture.api;
-    const api = navApi.start({
+    navApi.start({
       readEntity: fixture.parseEntity,
-      onNavigate: (entity, generation) => navigations.push({ key: navApi.entityKey(entity), generation }),
-      onRefresh: (entity, generation) => refreshes.push({ key: navApi.entityKey(entity), generation })
+      onNavigate: (entity, generation) =>
+        navigations.push({ key: navApi.entityKey(entity), generation }),
+      onRefresh: (entity, generation) =>
+        refreshes.push({ key: navApi.entityKey(entity), generation }),
     });
     fixture.advance(0);
     assert.equal(navigations.length, 1);
@@ -254,7 +289,11 @@ describe("shared SPA navigation", () => {
     fixture.trigger("popstate");
     assert.equal(navigations.length, 4);
 
-    fixture.history.pushState({}, "", "https://www.deezer.com/album/4?tab=tracks#top");
+    fixture.history.pushState(
+      {},
+      "",
+      "https://www.deezer.com/album/4?tab=tracks#top",
+    );
     assert.equal(navigations.length, 4);
     fixture.triggerMutation();
     fixture.triggerMutation();
@@ -266,14 +305,18 @@ describe("shared SPA navigation", () => {
 
   test("refreshes existing JSON-LD text after settling without another navigation", () => {
     const fixture = loadCoordinator("https://www.deezer.com/album/1");
-    const script = fixture.document.head.appendChild(fixture.document.createElement("script"));
-    const metadata = script.appendChild(fixture.document.createTextNode('{"followers":1234}'));
+    const script = fixture.document.head.appendChild(
+      fixture.document.createElement("script"),
+    );
+    const metadata = script.appendChild(
+      fixture.document.createTextNode('{"followers":1234}'),
+    );
     const followers = [];
     const navigations = [];
     const api = fixture.api.start({
       readEntity: fixture.parseEntity,
       onNavigate: (_entity, generation) => navigations.push(generation),
-      onRefresh: () => followers.push(JSON.parse(metadata.data).followers)
+      onRefresh: () => followers.push(JSON.parse(metadata.data).followers),
     });
     fixture.advance(2000);
     followers.length = 0;
@@ -292,12 +335,20 @@ describe("shared SPA navigation", () => {
 
   test("ignores toast text and element changes but refreshes metadata in the same batch without looping", () => {
     const fixture = loadCoordinator("https://www.deezer.com/album/1");
-    const host = fixture.document.body.appendChild(fixture.document.createElement("div"));
+    const host = fixture.document.body.appendChild(
+      fixture.document.createElement("div"),
+    );
     host.setAttribute("class", "ralgrum-toast-host");
     const label = host.appendChild(fixture.document.createElement("a"));
-    const toastText = label.appendChild(fixture.document.createTextNode("Loading"));
-    const script = fixture.document.head.appendChild(fixture.document.createElement("script"));
-    const metadata = script.appendChild(fixture.document.createTextNode('{"followers":1234}'));
+    const toastText = label.appendChild(
+      fixture.document.createTextNode("Loading"),
+    );
+    const script = fixture.document.head.appendChild(
+      fixture.document.createElement("script"),
+    );
+    const metadata = script.appendChild(
+      fixture.document.createTextNode('{"followers":1234}'),
+    );
     const followers = [];
     fixture.api.start({
       readEntity: fixture.parseEntity,
@@ -307,7 +358,7 @@ describe("shared SPA navigation", () => {
         followers.push(count);
         toastText.data = `${count} followers`;
         label.setAttribute("href", "ralgrum://open");
-      }
+      },
     });
     fixture.advance(2000);
     followers.length = 0;
@@ -337,12 +388,16 @@ describe("shared SPA navigation", () => {
     const api = navApi.start({
       readEntity: fixture.parseEntity,
       onNavigate() {},
-      onRefresh: (entity, generation) => refreshes.push({ key: navApi.entityKey(entity), generation })
+      onRefresh: (entity, generation) =>
+        refreshes.push({ key: navApi.entityKey(entity), generation }),
     });
     fixture.history.pushState({}, "", "https://www.deezer.com/album/2");
     fixture.history.pushState({}, "", "https://www.deezer.com/album/3");
     fixture.advance(2000);
-    assert.deepEqual([...new Set(refreshes.map((item) => item.key))], ["deezer:album:3"]);
+    assert.deepEqual(
+      [...new Set(refreshes.map((item) => item.key))],
+      ["deezer:album:3"],
+    );
     assert.ok(refreshes.every((item) => item.generation === api.generation()));
   });
 });

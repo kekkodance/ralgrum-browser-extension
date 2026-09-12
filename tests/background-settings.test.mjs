@@ -3,13 +3,16 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { describe, test } from "node:test";
 
-const backgroundSource = readFileSync(new URL("../extension/background.js", import.meta.url), "utf8");
+const backgroundSource = readFileSync(
+  new URL("../extension/background.js", import.meta.url),
+  "utf8",
+);
 const defaults = {
   autoShow: true,
   showOnTrack: true,
   showOnCollection: true,
   showOnArtist: true,
-  providers: { deezer: true, soundcloud: true }
+  providers: { deezer: true, soundcloud: true },
 };
 const nextTurn = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -25,13 +28,13 @@ function backgroundSettings(api, initial = defaults) {
     onMessage: {
       addListener(value) {
         listener = value;
-      }
+      },
     },
     onInstalled: {
       addListener(value) {
         installed = value;
-      }
-    }
+      },
+    },
   };
 
   function storageCall(method, value, callback) {
@@ -69,7 +72,7 @@ function backgroundSettings(api, initial = defaults) {
         } else {
           resolve(method === "get" ? snapshot : undefined);
         }
-      }
+      },
     });
     return result;
   }
@@ -83,11 +86,15 @@ function backgroundSettings(api, initial = defaults) {
         },
         set(value, callback) {
           return storageCall("set", value, callback);
-        }
-      }
-    }
+        },
+      },
+    },
   };
-  vm.runInNewContext(backgroundSource, { [api]: namespace, Promise }, { filename: "extension/background.js" });
+  vm.runInNewContext(
+    backgroundSource,
+    { [api]: namespace, Promise },
+    { filename: "extension/background.js" },
+  );
 
   function send(message) {
     if (api === "browser") {
@@ -146,7 +153,7 @@ function backgroundSettings(api, initial = defaults) {
     },
     removeStorage() {
       delete namespace.storage;
-    }
+    },
   };
 }
 
@@ -155,12 +162,26 @@ for (const api of ["chrome", "browser"]) {
     test("simultaneous provider edits both persist", async () => {
       const background = backgroundSettings(api);
       await background.flush();
-      const deezer = background.send({ type: "RALGRUM_SET_SETTING", key: "deezer", value: false });
-      const soundcloud = background.send({ type: "RALGRUM_SET_SETTING", key: "soundcloud", value: false });
+      const deezer = background.send({
+        type: "RALGRUM_SET_SETTING",
+        key: "deezer",
+        value: false,
+      });
+      const soundcloud = background.send({
+        type: "RALGRUM_SET_SETTING",
+        key: "soundcloud",
+        value: false,
+      });
       await background.flush();
       assert.equal((await deezer).ok, true);
-      assert.deepEqual(background.stored, { ...defaults, providers: { deezer: false, soundcloud: false } });
-      assert.deepEqual(await soundcloud, { ok: true, settings: background.stored });
+      assert.deepEqual(background.stored, {
+        ...defaults,
+        providers: { deezer: false, soundcloud: false },
+      });
+      assert.deepEqual(await soundcloud, {
+        ok: true,
+        settings: background.stored,
+      });
     });
 
     test("an intended scalar edit ignores stale unrelated values", async () => {
@@ -169,7 +190,7 @@ for (const api of ["chrome", "browser"]) {
         autoShow: false,
         showOnTrack: false,
         providers: { deezer: false, soundcloud: true, futureProvider: false },
-        unrelated: { enabled: false }
+        unrelated: { enabled: false },
       };
       const background = backgroundSettings(api, initial);
       await background.flush();
@@ -179,11 +200,14 @@ for (const api of ["chrome", "browser"]) {
         value: false,
         autoShow: true,
         showOnTrack: true,
-        providers: { deezer: true, soundcloud: true }
+        providers: { deezer: true, soundcloud: true },
       });
       await background.flush();
       assert.deepEqual(background.stored, { ...initial, showOnArtist: false });
-      assert.deepEqual(await response, { ok: true, settings: background.stored });
+      assert.deepEqual(await response, {
+        ok: true,
+        settings: background.stored,
+      });
     });
 
     test("provider edits preserve unknown provider flags and unrelated fields", async () => {
@@ -191,24 +215,41 @@ for (const api of ["chrome", "browser"]) {
         ...defaults,
         showOnCollection: false,
         providers: { deezer: true, soundcloud: false, futureProvider: false },
-        unrelated: "keep me"
+        unrelated: "keep me",
       };
       const background = backgroundSettings(api, initial);
       await background.flush();
-      const response = background.send({ type: "RALGRUM_SET_SETTING", key: "deezer", value: false });
+      const response = background.send({
+        type: "RALGRUM_SET_SETTING",
+        key: "deezer",
+        value: false,
+      });
       await background.flush();
       assert.deepEqual(background.stored, {
         ...initial,
-        providers: { deezer: false, soundcloud: false, futureProvider: false }
+        providers: { deezer: false, soundcloud: false, futureProvider: false },
       });
-      assert.deepEqual(await response, { ok: true, settings: background.stored });
+      assert.deepEqual(await response, {
+        ok: true,
+        settings: background.stored,
+      });
     });
 
     test("pending startup defaults and installation cannot undo user toggles", async () => {
-      const background = backgroundSettings(api, { providers: { deezer: false } });
+      const background = backgroundSettings(api, {
+        providers: { deezer: false },
+      });
       const firstRead = await background.pause("get");
-      const autoShow = background.send({ type: "RALGRUM_SET_SETTING", key: "autoShow", value: false });
-      const soundcloud = background.send({ type: "RALGRUM_SET_SETTING", key: "soundcloud", value: false });
+      const autoShow = background.send({
+        type: "RALGRUM_SET_SETTING",
+        key: "autoShow",
+        value: false,
+      });
+      const soundcloud = background.send({
+        type: "RALGRUM_SET_SETTING",
+        key: "soundcloud",
+        value: false,
+      });
       background.install();
       firstRead.complete();
       const defaultWrite = await background.pause("set");
@@ -218,25 +259,33 @@ for (const api of ["chrome", "browser"]) {
       assert.deepEqual(background.stored, {
         ...defaults,
         autoShow: false,
-        providers: { deezer: false, soundcloud: false }
+        providers: { deezer: false, soundcloud: false },
       });
-      assert.deepEqual(await soundcloud, { ok: true, settings: background.stored });
+      assert.deepEqual(await soundcloud, {
+        ok: true,
+        settings: background.stored,
+      });
     });
 
     test("success is not reported before the write persists", async () => {
       const background = backgroundSettings(api);
       await background.flush();
       let replied = false;
-      const response = background.send({ type: "RALGRUM_SET_SETTING", key: "deezer", value: false }).then((value) => {
-        replied = true;
-        return value;
-      });
+      const response = background
+        .send({ type: "RALGRUM_SET_SETTING", key: "deezer", value: false })
+        .then((value) => {
+          replied = true;
+          return value;
+        });
       const write = await background.pause("set");
       assert.equal(replied, false);
       assert.equal(background.stored.providers.deezer, true);
       write.complete();
       await background.flush();
-      assert.deepEqual(await response, { ok: true, settings: background.stored });
+      assert.deepEqual(await response, {
+        ok: true,
+        settings: background.stored,
+      });
       assert.equal(background.stored.providers.deezer, false);
     });
 
@@ -250,13 +299,15 @@ for (const api of ["chrome", "browser"]) {
         { key: "deezer", value: "false" },
         { key: "autoShow", value: 0 },
         { value: false },
-        { key: "showOnArtist" }
+        { key: "showOnArtist" },
       ];
-      const responses = invalid.map((fields) => background.send({ type: "RALGRUM_SET_SETTING", ...fields }));
+      const responses = invalid.map((fields) =>
+        background.send({ type: "RALGRUM_SET_SETTING", ...fields }),
+      );
       await background.flush();
       assert.deepEqual(
         await Promise.all(responses),
-        invalid.map(() => ({ ok: false }))
+        invalid.map(() => ({ ok: false })),
       );
       assert.deepEqual(background.stored, defaults);
       assert.deepEqual(background.writes, []);
@@ -266,34 +317,62 @@ for (const api of ["chrome", "browser"]) {
       test(`a failed ${method} reports failure and does not poison later edits`, async () => {
         const background = backgroundSettings(api);
         await background.flush();
-        const response = background.send({ type: "RALGRUM_SET_SETTING", key: "deezer", value: false });
+        const response = background.send({
+          type: "RALGRUM_SET_SETTING",
+          key: "deezer",
+          value: false,
+        });
         const request = await background.pause(method);
         request.complete(new Error("Storage operation failed"));
         await background.flush();
         assert.deepEqual(await response, { ok: false });
         assert.deepEqual(background.stored, defaults);
-        const recovery = background.send({ type: "RALGRUM_SET_SETTING", key: "soundcloud", value: false });
+        const recovery = background.send({
+          type: "RALGRUM_SET_SETTING",
+          key: "soundcloud",
+          value: false,
+        });
         await background.flush();
-        assert.deepEqual(background.stored.providers, { deezer: true, soundcloud: false });
-        assert.deepEqual(await recovery, { ok: true, settings: background.stored });
+        assert.deepEqual(background.stored.providers, {
+          deezer: true,
+          soundcloud: false,
+        });
+        assert.deepEqual(await recovery, {
+          ok: true,
+          settings: background.stored,
+        });
       });
     }
 
     test("failed initialization does not discard a queued user edit", async () => {
       const background = backgroundSettings(api, {});
       const firstRead = await background.pause("get");
-      const response = background.send({ type: "RALGRUM_SET_SETTING", key: "deezer", value: false });
+      const response = background.send({
+        type: "RALGRUM_SET_SETTING",
+        key: "deezer",
+        value: false,
+      });
       firstRead.complete(new Error("Startup read failed"));
       await background.flush();
-      assert.deepEqual(background.stored, { ...defaults, providers: { deezer: false, soundcloud: true } });
-      assert.deepEqual(await response, { ok: true, settings: background.stored });
+      assert.deepEqual(background.stored, {
+        ...defaults,
+        providers: { deezer: false, soundcloud: true },
+      });
+      assert.deepEqual(await response, {
+        ok: true,
+        settings: background.stored,
+      });
     });
 
     test("synchronous storage failures report failure", async () => {
       const background = backgroundSettings(api);
       await background.flush();
       background.throwNext("set");
-      const response = background.send({ type: "RALGRUM_SET_SETTING", key: "showOnTrack", value: false });
+      const response = background.send({
+        type: "RALGRUM_SET_SETTING",
+        key: "showOnTrack",
+        value: false,
+      });
       await background.flush();
       assert.deepEqual(await response, { ok: false });
       assert.deepEqual(background.stored, defaults);
@@ -303,7 +382,11 @@ for (const api of ["chrome", "browser"]) {
       const background = backgroundSettings(api);
       await background.flush();
       background.removeStorage();
-      const response = background.send({ type: "RALGRUM_SET_SETTING", key: "showOnCollection", value: false });
+      const response = background.send({
+        type: "RALGRUM_SET_SETTING",
+        key: "showOnCollection",
+        value: false,
+      });
       await background.flush();
       assert.deepEqual(await response, { ok: false });
       assert.deepEqual(background.stored, defaults);

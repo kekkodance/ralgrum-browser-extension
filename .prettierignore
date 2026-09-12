@@ -1,0 +1,4 @@
+dist/
+screenshots/
+extension/icons/*.png
+extension/icons/*.svg

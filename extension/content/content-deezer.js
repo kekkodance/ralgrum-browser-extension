@@ -1,15 +1,18 @@
 // Deezer content script: detects track/album/playlist/artist and shows toast.
 // Runs at document_idle, observes SPA navigation, respects stored settings.
 (function () {
-  'use strict';
+  "use strict";
   function getMeta(prop) {
     var el =
-      document.querySelector('meta[property="' + prop + '"]') || document.querySelector('meta[name="' + prop + '"]');
-    return el ? el.getAttribute('content') || '' : '';
+      document.querySelector('meta[property="' + prop + '"]') ||
+      document.querySelector('meta[name="' + prop + '"]');
+    return el ? el.getAttribute("content") || "" : "";
   }
   function jsonLdNodes() {
     try {
-      return Array.prototype.slice.call(document.querySelectorAll('script[type="application/ld+json"]'));
+      return Array.prototype.slice.call(
+        document.querySelectorAll('script[type="application/ld+json"]'),
+      );
     } catch (e) {
       return [];
     }
@@ -28,7 +31,7 @@
         }
         continue;
       }
-      if (typeof node === 'object') {
+      if (typeof node === "object") {
         out.push(node);
         for (var k in node) {
           if (Object.prototype.hasOwnProperty.call(node, k)) {
@@ -41,46 +44,56 @@
   }
   function personName(value) {
     if (!value) {
-      return '';
+      return "";
     }
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       return value;
     }
     var list = Array.isArray(value) ? value : [value];
     for (var i = 0; i < list.length; i++) {
       var item = list[i];
-      if (typeof item === 'string' && item) {
+      if (typeof item === "string" && item) {
         return item;
       }
-      if (item && typeof item === 'object' && item.name) {
+      if (item && typeof item === "object" && item.name) {
         return String(item.name);
       }
     }
-    return '';
+    return "";
   }
   function nodePageUrl(node) {
-    if (!node || typeof node !== 'object') {
-      return '';
+    if (!node || typeof node !== "object") {
+      return "";
     }
-    var url = node.url || node.mainEntityOfPage || '';
-    if (typeof url === 'object' && url) {
-      url = url['@id'] || '';
+    var url = node.url || node.mainEntityOfPage || "";
+    if (typeof url === "object" && url) {
+      url = url["@id"] || "";
     }
-    return String(url || '');
+    return String(url || "");
   }
   function jsonLdArtistName(entity) {
     var scripts = jsonLdNodes();
     for (var i = 0; i < scripts.length; i++) {
       try {
-        var data = JSON.parse(scripts[i].textContent || 'null');
+        var data = JSON.parse(scripts[i].textContent || "null");
         var nodes = flatNodes(data);
         for (var j = 0; j < nodes.length; j++) {
           var node = nodes[j];
-          var t = String(node['@type'] || '').toLowerCase();
-          if (t !== 'musicrecording' && t !== 'musicalbum' && t !== 'musicplaylist' && t !== 'audioobject') {
+          var t = String(node["@type"] || "").toLowerCase();
+          if (
+            t !== "musicrecording" &&
+            t !== "musicalbum" &&
+            t !== "musicplaylist" &&
+            t !== "audioobject"
+          ) {
             continue;
           }
-          if (!sameEntity(window.RalgrumDetectors.parseDeezerUrl(nodePageUrl(node)), entity)) {
+          if (
+            !sameEntity(
+              window.RalgrumDetectors.parseDeezerUrl(nodePageUrl(node)),
+              entity,
+            )
+          ) {
             continue;
           }
           var name =
@@ -96,22 +109,31 @@
         // skip malformed block
       }
     }
-    return '';
+    return "";
   }
   function ogDescriptionArtist() {
-    var d = getMeta('og:description') || '';
+    var d = getMeta("og:description") || "";
     var m = d.match(/^(.*) - (song|album) - .*$/);
-    return m ? m[1].trim() : '';
+    return m ? m[1].trim() : "";
   }
   function sameEntity(a, b) {
-    if (window.RalgrumDeezerMetadata && window.RalgrumDeezerMetadata.sameEntity) {
+    if (
+      window.RalgrumDeezerMetadata &&
+      window.RalgrumDeezerMetadata.sameEntity
+    ) {
       return window.RalgrumDeezerMetadata.sameEntity(a, b);
     }
-    return !!a && !!b && a.provider === b.provider && a.type === b.type && String(a.id || '') === String(b.id || '');
+    return (
+      !!a &&
+      !!b &&
+      a.provider === b.provider &&
+      a.type === b.type &&
+      String(a.id || "") === String(b.id || "")
+    );
   }
   function headFresh(currentEntity, detectors, property) {
     try {
-      var u = getMeta(property) || '';
+      var u = getMeta(property) || "";
       if (!u) {
         return false;
       }
@@ -126,9 +148,9 @@
   }
   function h1Title() {
     try {
-      var els = document.querySelectorAll('h1');
+      var els = document.querySelectorAll("h1");
       for (var i = 0; i < els.length; i++) {
-        var t = (els[i].textContent || '').trim().replace(/\s+/g, ' ');
+        var t = (els[i].textContent || "").trim().replace(/\s+/g, " ");
         if (t && t.length <= 120) {
           return t;
         }
@@ -136,30 +158,34 @@
     } catch (e) {
       // ignore DOM read errors
     }
-    return '';
+    return "";
   }
   function readPage(currentEntity) {
     var detectors = window.RalgrumDetectors;
     if (!detectors) {
       return null;
     }
-    var entity = currentEntity || detectors.parseDeezerUrl(window.location.href);
+    var entity =
+      currentEntity || detectors.parseDeezerUrl(window.location.href);
     if (!entity) {
       return null;
     }
-    var ogFresh = headFresh(entity, detectors, 'og:url');
-    var twitterFresh = headFresh(entity, detectors, 'twitter:url');
+    var ogFresh = headFresh(entity, detectors, "og:url");
+    var twitterFresh = headFresh(entity, detectors, "twitter:url");
     var fresh = ogFresh || twitterFresh;
-    var title = '';
+    var title = "";
     if (fresh) {
       title =
-        (twitterFresh && getMeta('twitter:title')) ||
-        (ogFresh && getMeta('og:title')) ||
+        (twitterFresh && getMeta("twitter:title")) ||
+        (ogFresh && getMeta("og:title")) ||
         document.title ||
         h1Title() ||
-        '';
+        "";
     }
-    var metaArt = (twitterFresh && getMeta('twitter:image')) || (ogFresh && getMeta('og:image')) || '';
+    var metaArt =
+      (twitterFresh && getMeta("twitter:image")) ||
+      (ogFresh && getMeta("og:image")) ||
+      "";
     var artwork = metaArt || detectors.deezerArtworkFor(entity);
     function firstPerformer(properties) {
       for (var i = 0; i < properties.length; i++) {
@@ -168,24 +194,32 @@
           return value;
         }
       }
-      return '';
+      return "";
     }
     var twitterPerformer = twitterFresh
-      ? firstPerformer(['twitter:audio:artist_name', 'twitter:creator', 'twitter:description'])
-      : '';
-    var ogPerformer = ogFresh ? firstPerformer(['music:musician', 'og:audio:artist', 'author']) : '';
-    var performer = twitterPerformer || ogPerformer || '';
+      ? firstPerformer([
+          "twitter:audio:artist_name",
+          "twitter:creator",
+          "twitter:description",
+        ])
+      : "";
+    var ogPerformer = ogFresh
+      ? firstPerformer(["music:musician", "og:audio:artist", "author"])
+      : "";
+    var performer = twitterPerformer || ogPerformer || "";
     function embeddedState() {
       try {
-        var stateEl = document.getElementById('__DZR_APP_STATE__');
-        var scripts = Array.prototype.slice.call(document.querySelectorAll('script'));
+        var stateEl = document.getElementById("__DZR_APP_STATE__");
+        var scripts = Array.prototype.slice.call(
+          document.querySelectorAll("script"),
+        );
         if (stateEl) {
           scripts.unshift(stateEl);
         }
         for (var i = 0; i < scripts.length; i++) {
-          var source = scripts[i].textContent || '';
+          var source = scripts[i].textContent || "";
           var assignment = source.match(
-            /^\s*(?:(?:var|let|const)\s+|(?:window|globalThis)\.)?__DZR_APP_STATE__\s*=\s*([\s\S]*?)\s*;?\s*$/
+            /^\s*(?:(?:var|let|const)\s+|(?:window|globalThis)\.)?__DZR_APP_STATE__\s*=\s*([\s\S]*?)\s*;?\s*$/,
           );
           var nodes;
           try {
@@ -195,33 +229,35 @@
           }
           for (var j = 0; j < nodes.length; j++) {
             var node = nodes[j];
-            var linked = detectors.parseDeezerUrl(node.link || node.url || '');
+            var linked = detectors.parseDeezerUrl(node.link || node.url || "");
             if (!linked) {
               var type =
                 node.SNG_ID != null
-                  ? 'track'
+                  ? "track"
                   : node.ALB_ID != null
-                    ? 'album'
+                    ? "album"
                     : node.PLAYLIST_ID != null
-                      ? 'playlist'
+                      ? "playlist"
                       : node.ART_ID != null
-                        ? 'artist'
+                        ? "artist"
                         : node.type;
               var id =
-                type === 'track'
+                type === "track"
                   ? node.SNG_ID
-                  : type === 'album'
+                  : type === "album"
                     ? node.ALB_ID
-                    : type === 'playlist'
+                    : type === "playlist"
                       ? node.PLAYLIST_ID
-                      : type === 'artist'
+                      : type === "artist"
                         ? node.ART_ID
                         : null;
               if (id == null) {
                 id = node.id;
               }
-              if (typeof id === 'string' || typeof id === 'number') {
-                linked = detectors.parseDeezerUrl('https://www.deezer.com/' + type + '/' + id);
+              if (typeof id === "string" || typeof id === "number") {
+                linked = detectors.parseDeezerUrl(
+                  "https://www.deezer.com/" + type + "/" + id,
+                );
               }
             }
             if (sameEntity(linked, entity)) {
@@ -236,131 +272,153 @@
     }
     var state = fresh ? embeddedState() : {};
     function stateStr(key) {
-      return typeof state[key] === 'string' ? state[key].trim() : '';
+      return typeof state[key] === "string" ? state[key].trim() : "";
     }
     function stateNum(key) {
       var value = state[key];
-      return (typeof value === 'number' || typeof value === 'string') && /^\d+$/.test(String(value))
+      return (typeof value === "number" || typeof value === "string") &&
+        /^\d+$/.test(String(value))
         ? String(value)
-        : '';
+        : "";
     }
     function stateArtists(max) {
       var out = [];
-      var artists = [state.ART_NAME, state.artist].concat(Array.isArray(state.contributors) ? state.contributors : []);
+      var artists = [state.ART_NAME, state.artist].concat(
+        Array.isArray(state.contributors) ? state.contributors : [],
+      );
       for (var i = 0; i < artists.length && out.length < max; i++) {
         var name = personName(artists[i]).trim();
         if (name && !/^https?:\/\//i.test(name) && out.indexOf(name) === -1) {
           out.push(name);
         }
       }
-      return out.join(', ');
+      return out.join(", ");
     }
     function grouped(value) {
       var n = Number(value);
-      return isFinite(n) ? n.toLocaleString('en-US') : String(value);
+      return isFinite(n) ? n.toLocaleString("en-US") : String(value);
     }
     function visibleFans() {
       try {
-        var text = (document.body && document.body.innerText) || '';
+        var text = (document.body && document.body.innerText) || "";
         if (!text) {
-          return '';
+          return "";
         }
+        // eslint-disable-next-line no-irregular-whitespace -- character class holds a literal NBSP
         var m = text.match(/(\d[\d., \t ]*[KMB]?)\s+fans?\b/i); // class holds a literal NBSP
         if (m && m[1] && m[1].length <= 24) {
-          return (m[1] + ' fans').replace(/\s+/g, ' ').trim();
+          return (m[1] + " fans").replace(/\s+/g, " ").trim();
         }
       } catch (e) {
         // ignore DOM read errors
       }
-      return '';
+      return "";
     }
     function nestedName(objKey) {
       var name = personName(state[objKey]).trim();
-      return name && !/^https?:\/\//i.test(name) ? name : '';
+      return name && !/^https?:\/\//i.test(name) ? name : "";
     }
     var subtitle;
-    if (entity.type === 'artist') {
-      var fans = stateNum('NB_FAN') || stateNum('nb_fan');
-      subtitle = fans ? grouped(fans) + ' fans' : visibleFans();
-    } else if (entity.type === 'album') {
+    if (entity.type === "artist") {
+      var fans = stateNum("NB_FAN") || stateNum("nb_fan");
+      subtitle = fans ? grouped(fans) + " fans" : visibleFans();
+    } else if (entity.type === "album") {
       subtitle =
         performer ||
         stateArtists(3) ||
-        stateStr('ARTIST_NAME') ||
-        nestedName('artist') ||
-        (ogFresh ? ogDescriptionArtist() : '') ||
-        '';
-    } else if (entity.type === 'playlist') {
-      var ogDesc = '';
+        stateStr("ARTIST_NAME") ||
+        nestedName("artist") ||
+        (ogFresh ? ogDescriptionArtist() : "") ||
+        "";
+    } else if (entity.type === "playlist") {
+      var ogDesc = "";
       if (ogFresh) {
-        var rawDesc = getMeta('og:description') || '';
+        var rawDesc = getMeta("og:description") || "";
         if (rawDesc && rawDesc.length <= 80) {
           ogDesc = rawDesc;
         }
       }
       subtitle =
         performer ||
-        stateStr('CREATOR_NAME') ||
-        stateStr('PARENT_USERNAME') ||
-        stateStr('AUTHOR_NAME') ||
-        nestedName('creator') ||
-        stateStr('ART_NAME') ||
-        nestedName('artist') ||
+        stateStr("CREATOR_NAME") ||
+        stateStr("PARENT_USERNAME") ||
+        stateStr("AUTHOR_NAME") ||
+        nestedName("creator") ||
+        stateStr("ART_NAME") ||
+        nestedName("artist") ||
         ogDesc ||
-        '';
+        "";
     } else {
       subtitle =
-        performer || stateStr('ART_NAME') || nestedName('artist') || (ogFresh ? ogDescriptionArtist() : '') || '';
+        performer ||
+        stateStr("ART_NAME") ||
+        nestedName("artist") ||
+        (ogFresh ? ogDescriptionArtist() : "") ||
+        "";
     }
     if (/^https?:\/\/\S*$/i.test(subtitle)) {
-      subtitle = '';
+      subtitle = "";
     }
     if (!subtitle) {
-      subtitle = fresh ? jsonLdArtistName(entity) : '';
+      subtitle = fresh ? jsonLdArtistName(entity) : "";
     }
     if (/^https?:\/\/\S*$/i.test(subtitle)) {
-      subtitle = '';
+      subtitle = "";
     }
-    var explicitRaw = stateNum('EXPLICIT_LYRICS_STATUS');
+    var explicitRaw = stateNum("EXPLICIT_LYRICS_STATUS");
     var explicit =
-      entity.type === 'track' &&
-      (typeof state.explicit_lyrics === 'boolean'
+      entity.type === "track" &&
+      (typeof state.explicit_lyrics === "boolean"
         ? state.explicit_lyrics
-        : explicitRaw !== '' && Number(explicitRaw) > 0);
+        : explicitRaw !== "" && Number(explicitRaw) > 0);
     var related = [];
-    var dbgKeys = ['ART_NAME', 'ARTIST_NAME', 'CREATOR_NAME', 'PARENT_USERNAME', 'AUTHOR_NAME', 'NB_FAN']
+    var dbgKeys = [
+      "ART_NAME",
+      "ARTIST_NAME",
+      "CREATOR_NAME",
+      "PARENT_USERNAME",
+      "AUTHOR_NAME",
+      "NB_FAN",
+    ]
       .filter(function (k) {
         return Object.prototype.hasOwnProperty.call(state, k);
       })
-      .join('+');
+      .join("+");
     var nameKeys = Object.keys(state)
       .filter(function (key) {
-        return /^[A-Z][A-Z0-9_]*NAME[A-Z0-9_]*$/.test(key) || key === 'NB_FAN';
+        return /^[A-Z][A-Z0-9_]*NAME[A-Z0-9_]*$/.test(key) || key === "NB_FAN";
       })
       .slice(0, 8);
     var ldCount = 0;
     try {
-      ldCount = document.querySelectorAll('script[type="application/ld+json"]').length;
+      ldCount = document.querySelectorAll(
+        'script[type="application/ld+json"]',
+      ).length;
     } catch (e3) {
       // ignore
     }
     var dbg =
-      'keys=' +
-      (dbgKeys || 'none') +
-      ' ld=' +
+      "keys=" +
+      (dbgKeys || "none") +
+      " ld=" +
       ldCount +
-      ' fresh=' +
-      (fresh ? '1' : '0') +
-      ' namekeys=' +
-      (nameKeys.join('+') || 'none') +
-      ' title=' +
+      " fresh=" +
+      (fresh ? "1" : "0") +
+      " namekeys=" +
+      (nameKeys.join("+") || "none") +
+      " title=" +
       JSON.stringify(title.slice(0, 60));
     return {
       entity: entity,
-      meta: { title: title, subtitle: subtitle, artwork: artwork, explicit: explicit },
+      meta: {
+        title: title,
+        subtitle: subtitle,
+        artwork: artwork,
+        explicit: explicit,
+      },
       related: related,
       dbg: dbg,
-      fresh: fresh
+      fresh: fresh,
     };
   }
   function shouldShow(entity, settings) {
@@ -373,20 +431,27 @@
     if (settings.autoShow === false) {
       return false;
     }
-    if (entity.type === 'track' && settings.showOnTrack === false) {
+    if (entity.type === "track" && settings.showOnTrack === false) {
       return false;
     }
-    if ((entity.type === 'album' || entity.type === 'playlist') && settings.showOnCollection === false) {
+    if (
+      (entity.type === "album" || entity.type === "playlist") &&
+      settings.showOnCollection === false
+    ) {
       return false;
     }
-    if (entity.type === 'artist' && settings.showOnArtist === false) {
+    if (entity.type === "artist" && settings.showOnArtist === false) {
       return false;
     }
     return true;
   }
   function getSettings(done) {
     try {
-      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+      if (
+        typeof chrome !== "undefined" &&
+        chrome.storage &&
+        chrome.storage.sync
+      ) {
         chrome.storage.sync.get(null, function (items) {
           done(items || {});
         });
@@ -399,10 +464,10 @@
   }
   function mergeMetadata(base, hydrated) {
     var merged = {
-      title: (base && base.title) || '',
-      subtitle: (base && base.subtitle) || '',
-      artwork: (base && base.artwork) || '',
-      explicit: !!(base && base.explicit)
+      title: (base && base.title) || "",
+      subtitle: (base && base.subtitle) || "",
+      artwork: (base && base.artwork) || "",
+      explicit: !!(base && base.explicit),
     };
     if (hydrated) {
       if (hydrated.title) {
@@ -414,7 +479,7 @@
       if (hydrated.artwork) {
         merged.artwork = hydrated.artwork;
       }
-      if (typeof hydrated.explicit === 'boolean') {
+      if (typeof hydrated.explicit === "boolean") {
         merged.explicit = hydrated.explicit;
       }
     }
@@ -426,7 +491,14 @@
     if (navigation && navigation.entityKey) {
       return navigation.entityKey(entity);
     }
-    return entity && entity.provider + ':' + entity.type + ':' + String(entity.id || entity.url || '');
+    return (
+      entity &&
+      entity.provider +
+        ":" +
+        entity.type +
+        ":" +
+        String(entity.id || entity.url || "")
+    );
   }
   function navigationIsCurrent(entity, generation) {
     if (navigation && navigation.isCurrent && generation != null) {
@@ -439,7 +511,9 @@
     return sameEntity(entity, current);
   }
   function domMetadataFor(found) {
-    return found && found.fresh ? found.meta : { title: '', subtitle: '', artwork: '', explicit: false };
+    return found && found.fresh
+      ? found.meta
+      : { title: "", subtitle: "", artwork: "", explicit: false };
   }
   function showFound(found, generation) {
     if (!window.RalgrumToast) {
@@ -451,7 +525,7 @@
     }
     var metadata = window.RalgrumDeezerMetadata;
     var cached = null;
-    if (metadata && typeof metadata.peek === 'function') {
+    if (metadata && typeof metadata.peek === "function") {
       try {
         cached = metadata.peek(requestEntity);
       } catch (e) {
@@ -459,13 +533,21 @@
       }
     }
     if (cached) {
-      window.RalgrumToast.showOncePerPage(requestEntity, mergeMetadata(domMetadataFor(found), cached), found.related);
+      window.RalgrumToast.showOncePerPage(
+        requestEntity,
+        mergeMetadata(domMetadataFor(found), cached),
+        found.related,
+      );
       return;
     }
     if (found.fresh) {
-      window.RalgrumToast.showOncePerPage(requestEntity, found.meta, found.related);
+      window.RalgrumToast.showOncePerPage(
+        requestEntity,
+        found.meta,
+        found.related,
+      );
     }
-    if (!metadata || typeof metadata.fetchFor !== 'function') {
+    if (!metadata || typeof metadata.fetchFor !== "function") {
       return;
     }
     var key = entityKey(requestEntity);
@@ -487,11 +569,17 @@
         if (hydrationAttachments[key] === attachment) {
           delete hydrationAttachments[key];
         }
-        if (!hydrated || !navigationIsCurrent(requestEntity, attachment.generation)) {
+        if (
+          !hydrated ||
+          !navigationIsCurrent(requestEntity, attachment.generation)
+        ) {
           return;
         }
         getSettings(function (settings) {
-          if (!navigationIsCurrent(requestEntity, attachment.generation) || !shouldShow(requestEntity, settings)) {
+          if (
+            !navigationIsCurrent(requestEntity, attachment.generation) ||
+            !shouldShow(requestEntity, settings)
+          ) {
             return;
           }
           var latestEntity =
@@ -506,7 +594,7 @@
           window.RalgrumToast.showOncePerPage(
             requestEntity,
             mergeMetadata(latestBase, hydrated),
-            latest ? latest.related : found.related
+            latest ? latest.related : found.related,
           );
         });
       },
@@ -514,7 +602,7 @@
         if (hydrationAttachments[key] === attachment) {
           delete hydrationAttachments[key];
         }
-      }
+      },
     );
   }
   function maybeShow(entity, generation) {
@@ -541,19 +629,24 @@
       showFound(found, generation);
     });
   }
-  var lastNoSubKey = '';
+  var lastNoSubKey = "";
   function debugNoSub(entity, extra) {
     try {
-      if (typeof console === 'undefined' || !console.debug) {
+      if (typeof console === "undefined" || !console.debug) {
         return;
       }
-      var k = entity.provider + ':' + entity.type + ':' + (entity.id || entity.url);
+      var k =
+        entity.provider + ":" + entity.type + ":" + (entity.id || entity.url);
       if (k === lastNoSubKey) {
         return;
       }
       lastNoSubKey = k;
       console.debug(
-        '[ralgrum] no subtitle extracted for ' + k + ' on ' + window.location.href + (extra ? ' (' + extra + ')' : '')
+        "[ralgrum] no subtitle extracted for " +
+          k +
+          " on " +
+          window.location.href +
+          (extra ? " (" + extra + ")" : ""),
       );
     } catch (e) {
       // ignore logging errors
@@ -561,7 +654,9 @@
   }
   function currentEntity() {
     var detectors = window.RalgrumDetectors;
-    return detectors && detectors.parseDeezerUrl ? detectors.parseDeezerUrl(window.location.href) : null;
+    return detectors && detectors.parseDeezerUrl
+      ? detectors.parseDeezerUrl(window.location.href)
+      : null;
   }
   if (window.RalgrumSpaNavigation && window.RalgrumSpaNavigation.start) {
     navigation = window.RalgrumSpaNavigation.start({
@@ -571,7 +666,7 @@
           window.RalgrumToast.resetForNavigation();
         }
       },
-      onRefresh: maybeShow
+      onRefresh: maybeShow,
     });
   } else {
     setTimeout(function () {

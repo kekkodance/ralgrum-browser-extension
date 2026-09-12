@@ -3,8 +3,14 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { describe, test } from "node:test";
 
-const source = readFileSync(new URL("../extension/content/toast.js", import.meta.url), "utf8");
-const detectorsSource = readFileSync(new URL("../extension/content/detectors.js", import.meta.url), "utf8");
+const source = readFileSync(
+  new URL("../extension/content/toast.js", import.meta.url),
+  "utf8",
+);
+const detectorsSource = readFileSync(
+  new URL("../extension/content/detectors.js", import.meta.url),
+  "utf8",
+);
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -16,7 +22,8 @@ function createDocument() {
     if (/^\.[\w-]+$/.test(selector)) {
       return (node) => node.className.split(/\s+/).includes(selector.slice(1));
     }
-    if (/^[a-z][\w-]*$/.test(selector)) return (node) => node.localName === selector;
+    if (/^[a-z][\w-]*$/.test(selector))
+      return (node) => node.localName === selector;
     const attribute = /^\[([\w-]+)(?:="([^"]*)")?\]$/.exec(selector);
     if (attribute) {
       return (node) =>
@@ -49,7 +56,9 @@ function createDocument() {
       this.setAttribute("class", value);
     }
     get textContent() {
-      return this._text + this.childNodes.map((node) => node.textContent).join("");
+      return (
+        this._text + this.childNodes.map((node) => node.textContent).join("")
+      );
     }
     set textContent(value) {
       for (const child of [...this.childNodes]) this.removeChild(child);
@@ -98,7 +107,8 @@ function createDocument() {
     removeChild(node) {
       const index = this.childNodes.indexOf(node);
       assert.notEqual(index, -1, "removeChild requires a direct child");
-      if (node.contains(focused) || node.contains(document.activeElement)) focused = null;
+      if (node.contains(focused) || node.contains(document.activeElement))
+        focused = null;
       this.childNodes.splice(index, 1);
       node.parentNode = null;
       return node;
@@ -114,7 +124,11 @@ function createDocument() {
     }
     closest(selector) {
       const matches = selectorMatcher(selector);
-      for (let node = this; node && node.nodeType === 1; node = node.parentNode) {
+      for (
+        let node = this;
+        node && node.nodeType === 1;
+        node = node.parentNode
+      ) {
         if (matches(node)) return node;
       }
       return null;
@@ -144,7 +158,8 @@ function createDocument() {
       let root = this;
       while (root.parentNode || root.host) root = root.parentNode || root.host;
       if (root !== document.documentElement) return;
-      if (this.localName !== "button" && this.getAttribute("tabindex") === null) return;
+      if (this.localName !== "button" && this.getAttribute("tabindex") === null)
+        return;
       focused = this;
     }
   }
@@ -155,7 +170,11 @@ function createDocument() {
       return new Node(tag.toLowerCase());
     },
     createElementNS(namespace, tag) {
-      assert.equal(namespace, SVG_NS, "Only SVG namespaced elements are needed");
+      assert.equal(
+        namespace,
+        SVG_NS,
+        "Only SVG namespaced elements are needed",
+      );
       return new Node(tag, namespace);
     },
     querySelector(selector) {
@@ -166,7 +185,7 @@ function createDocument() {
       let root = focused;
       while (root.parentNode) root = root.parentNode;
       return root.host || focused;
-    }
+    },
   };
   return document;
 }
@@ -182,8 +201,8 @@ function loadToast(runtime) {
     location: {
       set href(value) {
         navigations.push(value);
-      }
-    }
+      },
+    },
   };
   const context = {
     window,
@@ -199,7 +218,7 @@ function loadToast(runtime) {
     },
     clearTimeout(id) {
       timers.delete(id);
-    }
+    },
   };
   if (runtime.chrome) {
     context.chrome = runtime.chrome;
@@ -209,7 +228,9 @@ function loadToast(runtime) {
     context.browser = runtime.browser;
     window.browser = runtime.browser;
   }
-  vm.runInNewContext(detectorsSource, context, { filename: "content/detectors.js" });
+  vm.runInNewContext(detectorsSource, context, {
+    filename: "content/detectors.js",
+  });
   vm.runInNewContext(source, context, { filename: "content/toast.js" });
   function advance(milliseconds) {
     now += milliseconds;
@@ -237,7 +258,8 @@ function loadToast(runtime) {
     const event = { type: "click", target, currentTarget: null };
     for (let node = target; node; node = node.parentNode) {
       event.currentTarget = node;
-      for (const listener of node._listeners.get("click") || []) listener(event);
+      for (const listener of node._listeners.get("click") || [])
+        listener(event);
     }
   }
   return {
@@ -249,7 +271,7 @@ function loadToast(runtime) {
     navigations,
     click,
     clickDismiss: () => click(query(".rg-x").querySelector("path")),
-    advance
+    advance,
   };
 }
 
@@ -257,17 +279,22 @@ const entity = {
   provider: "deezer",
   type: "album",
   id: "42",
-  url: "https://www.deezer.com/album/42"
+  url: "https://www.deezer.com/album/42",
 };
 
 describe("toast runtime integration", () => {
   test("uses the logo when the preview runtime is installed after the toast script", () => {
     const chrome = {};
     const fixture = loadToast({ chrome });
-    chrome.runtime = { getURL: () => "chrome-extension://one/icons/icon32.png" };
+    chrome.runtime = {
+      getURL: () => "chrome-extension://one/icons/icon32.png",
+    };
     fixture.toast.show(entity, { title: "Album", subtitle: "Artist" }, []);
     assert.equal(fixture.query(".rg-logo").localName, "img");
-    assert.equal(fixture.query(".rg-logo").getAttribute("src"), "chrome-extension://one/icons/icon32.png");
+    assert.equal(
+      fixture.query(".rg-logo").getAttribute("src"),
+      "chrome-extension://one/icons/icon32.png",
+    );
     assert.equal(fixture.query(".rg-logo-fallback"), null);
   });
 
@@ -277,16 +304,28 @@ describe("toast runtime integration", () => {
     fixture.toast.show(entity, { title: "Album", subtitle: "Artist" }, []);
     assert.equal(fixture.query(".rg-logo-fallback").textContent, "R");
 
-    chrome.runtime = { getURL: () => "chrome-extension://one/icons/icon32.png" };
+    chrome.runtime = {
+      getURL: () => "chrome-extension://one/icons/icon32.png",
+    };
     fixture.toast.show(entity, { title: "Album", subtitle: "Artist" }, []);
-    assert.equal(fixture.query(".rg-logo").getAttribute("src"), "chrome-extension://one/icons/icon32.png");
+    assert.equal(
+      fixture.query(".rg-logo").getAttribute("src"),
+      "chrome-extension://one/icons/icon32.png",
+    );
     assert.equal(fixture.query(".rg-logo-fallback"), null);
   });
 
   test("resolves the logo through browser.runtime when Chrome is absent", () => {
-    const fixture = loadToast({ browser: { runtime: { getURL: () => "moz-extension://one/icons/icon32.png" } } });
+    const fixture = loadToast({
+      browser: {
+        runtime: { getURL: () => "moz-extension://one/icons/icon32.png" },
+      },
+    });
     fixture.toast.show(entity, { title: "Album", subtitle: "Artist" }, []);
-    assert.equal(fixture.query(".rg-logo").getAttribute("src"), "moz-extension://one/icons/icon32.png");
+    assert.equal(
+      fixture.query(".rg-logo").getAttribute("src"),
+      "moz-extension://one/icons/icon32.png",
+    );
   });
 
   test("does not render a generic collection label at an empty metadata deadline", () => {
@@ -295,23 +334,31 @@ describe("toast runtime integration", () => {
     fixture.advance(6000);
     assert.equal(fixture.getHost(), null);
 
-    fixture.toast.showOncePerPage(entity, { title: "Real album", subtitle: "" }, []);
+    fixture.toast.showOncePerPage(
+      entity,
+      { title: "Real album", subtitle: "" },
+      [],
+    );
     fixture.advance(0);
     assert.equal(fixture.query(".rg-htitle").textContent, "Real album");
   });
 
   test("renders complete authoritative metadata without the settling delay", () => {
     const fixture = loadToast({});
-    fixture.toast.showOncePerPage(entity, { title: "DOM title", subtitle: "" }, []);
+    fixture.toast.showOncePerPage(
+      entity,
+      { title: "DOM title", subtitle: "" },
+      [],
+    );
     assert.equal(fixture.getHost(), null);
     fixture.toast.showOncePerPage(
       entity,
       {
         title: "API title",
         subtitle: "API artist",
-        authoritative: true
+        authoritative: true,
       },
-      []
+      [],
     );
     assert.ok(fixture.getHost());
     assert.equal(fixture.query(".rg-htitle").textContent, "API title");
@@ -348,7 +395,11 @@ describe("toast runtime integration", () => {
   for (const authoritative of [true, false]) {
     test(`${authoritative ? "authoritative" : "page"} explicit-only updates add and remove the badge`, () => {
       const fixture = loadToast({});
-      const track = { ...entity, type: "track", url: "https://www.deezer.com/track/42" };
+      const track = {
+        ...entity,
+        type: "track",
+        url: "https://www.deezer.com/track/42",
+      };
       const meta = { title: "Track", subtitle: "Artist", authoritative };
       fixture.toast.showOncePerPage(track, { ...meta, explicit: false }, []);
       fixture.advance(800);
@@ -368,20 +419,36 @@ describe("toast runtime integration", () => {
 
   test("user dismissal survives temporary hiding until navigation reset", () => {
     const fixture = loadToast({});
-    fixture.toast.showOncePerPage(entity, { title: "Album", subtitle: "Artist" }, []);
+    fixture.toast.showOncePerPage(
+      entity,
+      { title: "Album", subtitle: "Artist" },
+      [],
+    );
     fixture.advance(800);
     fixture.clickDismiss();
     assert.equal(fixture.getHost(), null);
 
     fixture.toast.dismiss();
-    fixture.toast.showOncePerPage(entity, { title: "Album", subtitle: "Artist" }, []);
+    fixture.toast.showOncePerPage(
+      entity,
+      { title: "Album", subtitle: "Artist" },
+      [],
+    );
     assert.equal(fixture.getHost(), null);
 
-    fixture.toast.showOncePerPage(entity, { title: "Album changed", subtitle: "Artist" }, []);
+    fixture.toast.showOncePerPage(
+      entity,
+      { title: "Album changed", subtitle: "Artist" },
+      [],
+    );
     assert.equal(fixture.getHost(), null);
 
     fixture.toast.resetForNavigation();
-    fixture.toast.showOncePerPage(entity, { title: "Album changed", subtitle: "Artist" }, []);
+    fixture.toast.showOncePerPage(
+      entity,
+      { title: "Album changed", subtitle: "Artist" },
+      [],
+    );
     fixture.advance(800);
     assert.ok(fixture.getHost());
   });
@@ -391,9 +458,17 @@ describe("toast runtime integration", () => {
     const subtitle = `Artist <img src=x onerror='attack()'> &lt;em&gt; & "mix"'`;
     for (const type of ["track", "album"]) {
       const fixture = loadToast({});
-      fixture.toast.show({ ...entity, type, url: `https://www.deezer.com/${type}/42` }, { title, subtitle }, []);
-      const titleNode = fixture.query(type === "track" ? ".rg-ttitle" : ".rg-htitle");
-      const subtitleNode = fixture.query(type === "track" ? ".rg-tartist" : ".rg-hmeta");
+      fixture.toast.show(
+        { ...entity, type, url: `https://www.deezer.com/${type}/42` },
+        { title, subtitle },
+        [],
+      );
+      const titleNode = fixture.query(
+        type === "track" ? ".rg-ttitle" : ".rg-htitle",
+      );
+      const subtitleNode = fixture.query(
+        type === "track" ? ".rg-tartist" : ".rg-hmeta",
+      );
       assert.equal(titleNode.textContent, title);
       assert.equal(subtitleNode.textContent, subtitle);
       assert.equal(fixture.query("script"), null);
@@ -401,7 +476,7 @@ describe("toast runtime integration", () => {
       for (const node of fixture.getRoot().querySelectorAll("*")) {
         assert.deepEqual(
           node.getAttributeNames().filter((name) => /^on/i.test(name)),
-          []
+          [],
         );
       }
     }
@@ -412,15 +487,19 @@ describe("toast runtime integration", () => {
     fixture.toast.show(
       { ...entity, type: "track", url: "https://www.deezer.com/track/42" },
       { title: "Track", subtitle: "Artist" },
-      []
+      [],
     );
     const music = fixture.query(".rg-art-fallback").querySelector("svg");
     const deezer = fixture.query(".rg-prov").querySelector("svg");
     const close = fixture.query(".rg-x").querySelector("svg");
     fixture.toast.show(
-      { provider: "soundcloud", type: "playlist", url: "https://soundcloud.com/artist/sets/collection" },
+      {
+        provider: "soundcloud",
+        type: "playlist",
+        url: "https://soundcloud.com/artist/sets/collection",
+      },
       { title: "Collection", subtitle: "Artist" },
-      []
+      [],
     );
     const soundcloud = fixture.query(".rg-provcol").querySelector("svg");
     for (const glyph of [music, deezer, close, soundcloud]) {
@@ -433,19 +512,30 @@ describe("toast runtime integration", () => {
 
   test("primary and related controls navigate to their own original-protocol URLs", () => {
     const fixture = loadToast({});
-    const related = { provider: "deezer", type: "artist", id: "7", url: "https://www.deezer.com/artist/7" };
-    fixture.toast.show(entity, { title: 'Album & "Mix"', subtitle: "Artist" }, [related]);
+    const related = {
+      provider: "deezer",
+      type: "artist",
+      id: "7",
+      url: "https://www.deezer.com/artist/7",
+    };
+    fixture.toast.show(entity, { title: 'Album & "Mix"', subtitle: "Artist" }, [
+      related,
+    ]);
     fixture.click(".rg-primary");
     fixture.click(".rg-secondary");
     assert.deepEqual(fixture.navigations, [
       "ralgrum://open?provider=deezer&type=album&id=42&action=open&url=https%3A%2F%2Fwww.deezer.com%2Falbum%2F42&title=Album+%26+%22Mix%22",
-      "ralgrum://open?provider=deezer&type=artist&id=7&action=open&url=https%3A%2F%2Fwww.deezer.com%2Fartist%2F7"
+      "ralgrum://open?provider=deezer&type=artist&id=7&action=open&url=https%3A%2F%2Fwww.deezer.com%2Fartist%2F7",
     ]);
   });
 
   test("track title and SVG descendants delegate to the same play action as the primary control", () => {
     const fixture = loadToast({});
-    const track = { ...entity, type: "track", url: "https://www.deezer.com/track/42" };
+    const track = {
+      ...entity,
+      type: "track",
+      url: "https://www.deezer.com/track/42",
+    };
     fixture.toast.show(track, { title: "Track", subtitle: "Artist" }, []);
     fixture.click(".rg-ttitle");
     fixture.click(fixture.query(".rg-art-fallback").querySelector("path"));
@@ -467,7 +557,11 @@ describe("toast runtime integration", () => {
       const previousControl = fixture.query(selector);
       previousControl.focus();
       assert.equal(previousRoot.activeElement, previousControl);
-      fixture.toast.showOncePerPage(entity, { ...meta, title: `Updated ${selector}` }, []);
+      fixture.toast.showOncePerPage(
+        entity,
+        { ...meta, title: `Updated ${selector}` },
+        [],
+      );
       const control = fixture.query(selector);
       assert.notEqual(control, previousControl);
       assert.equal(fixture.getRoot().activeElement, control);
@@ -480,17 +574,33 @@ describe("toast runtime integration", () => {
 
   test("a focused related action follows its URL when metadata refresh reorders buttons", () => {
     const fixture = loadToast({});
-    const artist = { provider: "deezer", type: "artist", id: "7", url: "https://www.deezer.com/artist/7" };
-    const playlist = { provider: "deezer", type: "playlist", id: "8", url: "https://www.deezer.com/playlist/8" };
+    const artist = {
+      provider: "deezer",
+      type: "artist",
+      id: "7",
+      url: "https://www.deezer.com/artist/7",
+    };
+    const playlist = {
+      provider: "deezer",
+      type: "playlist",
+      id: "8",
+      url: "https://www.deezer.com/playlist/8",
+    };
     const meta = { title: "Album", subtitle: "Artist", authoritative: true };
     fixture.toast.showOncePerPage(entity, meta, [artist, playlist]);
     const previous = fixture.query(".rg-secondary");
     const url = previous.getAttribute("data-rg-open");
     previous.focus();
-    fixture.toast.showOncePerPage(entity, { ...meta, title: "Updated album" }, [playlist, artist]);
+    fixture.toast.showOncePerPage(entity, { ...meta, title: "Updated album" }, [
+      playlist,
+      artist,
+    ]);
     const focused = fixture.getRoot().activeElement;
     assert.notEqual(focused, previous);
-    assert.equal(focused, fixture.getRoot().querySelectorAll(".rg-secondary")[1]);
+    assert.equal(
+      focused,
+      fixture.getRoot().querySelectorAll(".rg-secondary")[1],
+    );
     assert.equal(focused.getAttribute("data-rg-open"), url);
     fixture.click(focused);
     assert.deepEqual(fixture.navigations, [url]);

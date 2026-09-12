@@ -7,7 +7,6 @@
   <p>When you are looking at a song, album, playlist, or artist in your browser, a small toast pops up in the top-right corner.</p>
 </div>
 
-
 ## What it does
 
 - Works on Deezer and SoundCloud song, album, playlist, and artist pages.
@@ -49,7 +48,6 @@ Firefox 142 or newer is required.
 
 A temporary add-on is removed when you restart Firefox.
 
-
 ### Connect it to the ralgruM app
 
 Clicking **Play** or **Open** asks your computer to open the link in ralgruM.
@@ -82,7 +80,7 @@ Click the ralgruM toolbar icon to change when the box appears.
 
 Changes apply immediately.
 
-## Privacy 
+## Privacy
 
 - We do not track you. There are no ads, no analytics, and no ralgruM servers collecting your browsing.
 - To show the title and cover picture, the add-on reads the page you are on. If it needs more detail, it asks Deezer (`api.deezer.com`) or SoundCloud (`soundcloud.com/oembed`) for that song, album, playlist, or artist. This happens when the box is turned on, before you click anything.
@@ -96,13 +94,15 @@ Changes apply immediately.
 Source layout:
 
 - `extension/` - the add-on (background, page scripts, pop-up, settings page, icons).
-- `tests/` - checks that run with plain Node.js, no extra installs needed.
+- `tests/` - checks that run with plain Node.js (`npm test` needs no extra installs; lint and format need `npm install` first).
 - `scripts/` - build script that creates `dist/chrome` and `dist/firefox`.
 
 Useful commands (Node 18 or newer):
 
 - `npm test` - run the checks.
 - `npm run build` - build the Chrome and Firefox folders in `dist/`. Store-upload files (ZIPs) are created manually afterwards.
+- `npm run lint` - run ESLint.
+- `npm run format:check` - check formatting with Prettier (`npm run format:write` fixes it).
 
 ## License
 

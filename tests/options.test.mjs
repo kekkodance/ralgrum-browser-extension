@@ -3,20 +3,29 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { describe, test } from "node:test";
 
-const optionsSource = readFileSync(new URL("../extension/options/options.js", import.meta.url), "utf8");
-const backgroundSource = readFileSync(new URL("../extension/background.js", import.meta.url), "utf8");
+const optionsSource = readFileSync(
+  new URL("../extension/options/options.js", import.meta.url),
+  "utf8",
+);
+const backgroundSource = readFileSync(
+  new URL("../extension/background.js", import.meta.url),
+  "utf8",
+);
 const htmlSources = Object.fromEntries(
   ["options", "popup"].map((surface) => [
     surface,
-    readFileSync(new URL(`../extension/${surface}/${surface}.html`, import.meta.url), "utf8")
-  ])
+    readFileSync(
+      new URL(`../extension/${surface}/${surface}.html`, import.meta.url),
+      "utf8",
+    ),
+  ]),
 );
 const defaults = {
   autoShow: true,
   showOnTrack: true,
   showOnCollection: true,
   showOnArtist: true,
-  providers: { deezer: true, soundcloud: true }
+  providers: { deezer: true, soundcloud: true },
 };
 const settle = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -46,7 +55,7 @@ function mountView(apiName, api, surface = "options") {
         if (this.disabled) return;
         this.checked = value;
         listeners.change();
-      }
+      },
     };
   }
   let ready;
@@ -57,12 +66,16 @@ function mountView(apiName, api, surface = "options") {
       },
       addEventListener(name, listener) {
         if (name === "DOMContentLoaded") ready = listener;
-      }
-    }
+      },
+    },
   };
   if (api) context[apiName] = api;
-  vm.runInNewContext(optionsSource, context, { filename: "extension/options/options.js" });
-  const beforeReady = Object.values(controls).map((control) => control.disabled);
+  vm.runInNewContext(optionsSource, context, {
+    filename: "extension/options/options.js",
+  });
+  const beforeReady = Object.values(controls).map(
+    (control) => control.disabled,
+  );
   ready();
   return { controls, beforeReady };
 }
@@ -77,10 +90,14 @@ function settingsEnvironment(apiName, initial = {}) {
   function update(patch) {
     const changes = {};
     for (const [key, value] of Object.entries(patch)) {
-      changes[key] = { oldValue: persisted[key], newValue: structuredClone(value) };
+      changes[key] = {
+        oldValue: persisted[key],
+        newValue: structuredClone(value),
+      };
       persisted[key] = structuredClone(value);
     }
-    for (const listener of storageListeners) listener(structuredClone(changes), "sync");
+    for (const listener of storageListeners)
+      listener(structuredClone(changes), "sync");
   }
 
   function makeApi(view) {
@@ -90,8 +107,8 @@ function settingsEnvironment(apiName, initial = {}) {
       onMessage: {
         addListener(listener) {
           messageListener = listener;
-        }
-      }
+        },
+      },
     };
     function deliver(promise, callback) {
       if (apiName === "browser") return promise;
@@ -104,7 +121,7 @@ function settingsEnvironment(apiName, initial = {}) {
           } finally {
             runtime.lastError = null;
           }
-        }
+        },
       );
     }
     runtime.sendMessage = (message, callback) => {
@@ -135,14 +152,17 @@ function settingsEnvironment(apiName, initial = {}) {
         onChanged: {
           addListener(listener) {
             storageListeners.push(listener);
-          }
+          },
         },
         sync: {
           get(_keys, callback) {
             const snapshot = structuredClone(persisted);
             if (view && view.holdRead) {
               const held = deferred();
-              view.reads.push({ release: () => held.resolve(snapshot), reject: held.reject });
+              view.reads.push({
+                release: () => held.resolve(snapshot),
+                reject: held.reject,
+              });
               return deliver(held.promise, callback);
             }
             return deliver(Promise.resolve(snapshot), callback);
@@ -156,13 +176,17 @@ function settingsEnvironment(apiName, initial = {}) {
               update(patch);
             });
             return deliver(save, callback);
-          }
-        }
-      }
+          },
+        },
+      },
     };
   }
 
-  vm.runInNewContext(backgroundSource, { [apiName]: makeApi(null) }, { filename: "extension/background.js" });
+  vm.runInNewContext(
+    backgroundSource,
+    { [apiName]: makeApi(null) },
+    { filename: "extension/background.js" },
+  );
   return {
     messages,
     persisted: () => structuredClone(persisted),
@@ -171,9 +195,15 @@ function settingsEnvironment(apiName, initial = {}) {
       failWrite = true;
     },
     open({ surface = "options", holdRead = false } = {}) {
-      const view = { holdRead, reads: [], holdResponse: false, responses: [], rejectMessage: false };
+      const view = {
+        holdRead,
+        reads: [],
+        holdResponse: false,
+        responses: [],
+        rejectMessage: false,
+      };
       return Object.assign(view, mountView(apiName, makeApi(view), surface));
-    }
+    },
   };
 }
 
@@ -181,10 +211,13 @@ describe("settings initialization", () => {
   test("both surfaces disable editing until a delayed read and preserve newer storage events", async () => {
     const env = settingsEnvironment("chrome", {
       autoShow: false,
-      providers: { deezer: false, soundcloud: true }
+      providers: { deezer: false, soundcloud: true },
     });
     await settle();
-    const views = [env.open({ holdRead: true }), env.open({ surface: "popup", holdRead: true })];
+    const views = [
+      env.open({ holdRead: true }),
+      env.open({ surface: "popup", holdRead: true }),
+    ];
     for (const view of views) {
       assert.deepEqual(view.beforeReady, [true, true, true, true, true, true]);
       assert.equal(view.controls.showOnArtist.disabled, true);
@@ -192,7 +225,10 @@ describe("settings initialization", () => {
     }
     assert.deepEqual(env.messages, []);
     assert.equal(env.persisted().showOnArtist, true);
-    env.update({ showOnArtist: false, providers: { deezer: false, soundcloud: false } });
+    env.update({
+      showOnArtist: false,
+      providers: { deezer: false, soundcloud: false },
+    });
     for (const view of views) view.reads.shift().release();
     await settle();
     for (const view of views) {
@@ -258,7 +294,10 @@ describe("concurrent settings views", () => {
     assert.equal(options.controls.soundcloud.checked, false);
     options.responses.shift()();
     await settle();
-    assert.deepEqual(env.persisted().providers, { deezer: true, soundcloud: false });
+    assert.deepEqual(env.persisted().providers, {
+      deezer: true,
+      soundcloud: false,
+    });
     for (const view of [options, popup]) {
       assert.equal(view.controls.deezer.checked, true);
       assert.equal(view.controls.soundcloud.checked, false);
@@ -299,7 +338,9 @@ describe("concurrent settings views", () => {
 
   for (const apiName of ["chrome", "browser"]) {
     test(`${apiName} message failures restore saved values and allow another edit`, async () => {
-      const env = settingsEnvironment(apiName, { providers: { deezer: false, soundcloud: true } });
+      const env = settingsEnvironment(apiName, {
+        providers: { deezer: false, soundcloud: true },
+      });
       await settle();
       const view = env.open();
       await settle();

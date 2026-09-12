@@ -1,29 +1,44 @@
 // Settings logic shared by the options page and the toolbar popup.
 (function () {
-  'use strict';
+  "use strict";
   var DEFAULTS = {
     autoShow: true,
     showOnTrack: true,
     showOnCollection: true,
     showOnArtist: true,
-    providers: { deezer: true, soundcloud: true }
+    providers: { deezer: true, soundcloud: true },
   };
-  var IDS = ['autoShow', 'showOnTrack', 'showOnCollection', 'showOnArtist', 'deezer', 'soundcloud'];
+  var IDS = [
+    "autoShow",
+    "showOnTrack",
+    "showOnCollection",
+    "showOnArtist",
+    "deezer",
+    "soundcloud",
+  ];
 
   function settingValue(settings, id) {
-    var provider = id === 'deezer' || id === 'soundcloud';
+    var provider = id === "deezer" || id === "soundcloud";
     var source = provider ? settings.providers : settings;
     var fallback = provider ? DEFAULTS.providers[id] : DEFAULTS[id];
-    return source && typeof source[id] === 'boolean' ? source[id] : fallback;
+    return source && typeof source[id] === "boolean" ? source[id] : fallback;
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener("DOMContentLoaded", function () {
     var api = null;
     var promiseApi = false;
-    if (typeof browser !== 'undefined' && browser.storage && browser.storage.sync) {
+    if (
+      typeof browser !== "undefined" &&
+      browser.storage &&
+      browser.storage.sync
+    ) {
       api = browser;
       promiseApi = true;
-    } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+    } else if (
+      typeof chrome !== "undefined" &&
+      chrome.storage &&
+      chrome.storage.sync
+    ) {
       api = chrome;
     }
 
@@ -38,7 +53,9 @@
 
     function render() {
       IDS.forEach(function (id) {
-        controls[id].checked = pending[id] ? pending[id].value : authoritative[id];
+        controls[id].checked = pending[id]
+          ? pending[id].value
+          : authoritative[id];
         controls[id].disabled = !loaded;
       });
     }
@@ -54,9 +71,10 @@
           owner,
           args.concat(function (result) {
             var error = api.runtime && api.runtime.lastError;
-            if (error) reject(new Error(error.message || 'Extension request failed'));
+            if (error)
+              reject(new Error(error.message || "Extension request failed"));
             else resolve(result);
-          })
+          }),
         );
       });
     }
@@ -72,7 +90,7 @@
 
     function refresh() {
       var startedAt = revision;
-      return callApi(api.storage.sync, 'get', [null]).then(function (settings) {
+      return callApi(api.storage.sync, "get", [null]).then(function (settings) {
         applySnapshot(settings, startedAt);
       });
     }
@@ -84,15 +102,15 @@
         var change = queue[0];
         var startedAt = revision;
         try {
-          var response = await callApi(api.runtime, 'sendMessage', [
+          var response = await callApi(api.runtime, "sendMessage", [
             {
-              type: 'RALGRUM_SET_SETTING',
+              type: "RALGRUM_SET_SETTING",
               key: change.key,
-              value: change.value
-            }
+              value: change.value,
+            },
           ]);
           if (!response || response.ok !== true || !response.settings) {
-            throw new Error('Setting was not saved');
+            throw new Error("Setting was not saved");
           }
           applySnapshot(response.settings, startedAt);
         } catch (error) {
@@ -114,7 +132,7 @@
       controls[id] = document.getElementById(id);
       authoritative[id] = settingValue(DEFAULTS, id);
       changedAt[id] = 0;
-      controls[id].addEventListener('change', function () {
+      controls[id].addEventListener("change", function () {
         if (!loaded) {
           render();
           return;
@@ -139,10 +157,10 @@
     }
 
     api.storage.onChanged.addListener(function (changes, area) {
-      if (area !== 'sync') return;
+      if (area !== "sync") return;
       revision += 1;
       IDS.forEach(function (id) {
-        var key = id === 'deezer' || id === 'soundcloud' ? 'providers' : id;
+        var key = id === "deezer" || id === "soundcloud" ? "providers" : id;
         if (!Object.prototype.hasOwnProperty.call(changes, key)) return;
         var settings = {};
         settings[key] = changes[key].newValue;
@@ -160,7 +178,7 @@
       function () {
         // Keep controls disabled rather than offering writes against an unread store.
         render();
-      }
+      },
     );
   });
 })();

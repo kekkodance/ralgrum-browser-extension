@@ -3,10 +3,22 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { describe, test } from "node:test";
 
-const detectorSource = readFileSync(new URL("../extension/content/detectors.js", import.meta.url), "utf8");
-const spaSource = readFileSync(new URL("../extension/content/spa-navigation.js", import.meta.url), "utf8");
-const deezerSource = readFileSync(new URL("../extension/content/content-deezer.js", import.meta.url), "utf8");
-const soundcloudSource = readFileSync(new URL("../extension/content/content-soundcloud.js", import.meta.url), "utf8");
+const detectorSource = readFileSync(
+  new URL("../extension/content/detectors.js", import.meta.url),
+  "utf8",
+);
+const spaSource = readFileSync(
+  new URL("../extension/content/spa-navigation.js", import.meta.url),
+  "utf8",
+);
+const deezerSource = readFileSync(
+  new URL("../extension/content/content-deezer.js", import.meta.url),
+  "utf8",
+);
+const soundcloudSource = readFileSync(
+  new URL("../extension/content/content-soundcloud.js", import.meta.url),
+  "utf8",
+);
 
 function loadProvider(provider, initialHref, initialMeta = {}) {
   let href = initialHref;
@@ -18,7 +30,7 @@ function loadProvider(provider, initialHref, initialMeta = {}) {
     showOnTrack: true,
     showOnCollection: true,
     showOnArtist: true,
-    providers: { deezer: true, soundcloud: true }
+    providers: { deezer: true, soundcloud: true },
   };
   let deferSettings = false;
   const pendingSettingsReads = [];
@@ -34,7 +46,7 @@ function loadProvider(provider, initialHref, initialMeta = {}) {
     },
     showOncePerPage(entity, values) {
       shown.push({ entity, values });
-    }
+    },
   };
   const scripts = [];
   const hydrationScripts = [];
@@ -44,11 +56,17 @@ function loadProvider(provider, initialHref, initialMeta = {}) {
     body: { innerText: "" },
     documentElement: {},
     getElementById(id) {
-      return scripts.concat(hydrationScripts).find((script) => script.id === id) || null;
+      return (
+        scripts.concat(hydrationScripts).find((script) => script.id === id) ||
+        null
+      );
     },
     querySelector(selector) {
       const metaMatch = selector.match(/^meta\[(?:property|name)="([^"]+)"\]$/);
-      if (metaMatch && Object.prototype.hasOwnProperty.call(meta, metaMatch[1])) {
+      if (
+        metaMatch &&
+        Object.prototype.hasOwnProperty.call(meta, metaMatch[1])
+      ) {
         return { getAttribute: () => meta[metaMatch[1]] };
       }
       if (selector === 'link[rel="canonical"]' && meta.canonical) {
@@ -70,7 +88,7 @@ function loadProvider(provider, initialHref, initialMeta = {}) {
         return artistLinks;
       }
       return [];
-    }
+    },
   };
   const location = {};
   Object.defineProperty(location, "href", { get: () => href });
@@ -82,13 +100,16 @@ function loadProvider(provider, initialHref, initialMeta = {}) {
       storage: {
         sync: {
           get(_keys, callback) {
-            const snapshot = { ...settings, providers: { ...settings.providers } };
+            const snapshot = {
+              ...settings,
+              providers: { ...settings.providers },
+            };
             const deliver = () => callback(snapshot);
             if (deferSettings) pendingSettingsReads.push(deliver);
             else deliver();
-          }
-        }
-      }
+          },
+        },
+      },
     },
     URL,
     URLSearchParams,
@@ -97,10 +118,14 @@ function loadProvider(provider, initialHref, initialMeta = {}) {
     setTimeout() {
       return 1;
     },
-    clearTimeout() {}
+    clearTimeout() {},
   };
-  vm.runInNewContext(detectorSource, context, { filename: "content/detectors.js" });
-  vm.runInNewContext(spaSource, context, { filename: "content/spa-navigation.js" });
+  vm.runInNewContext(detectorSource, context, {
+    filename: "content/detectors.js",
+  });
+  vm.runInNewContext(spaSource, context, {
+    filename: "content/spa-navigation.js",
+  });
   const stableEntityKey = window.RalgrumSpaNavigation.entityKey;
   window.RalgrumSpaNavigation = {
     entityKey: stableEntityKey,
@@ -110,14 +135,21 @@ function loadProvider(provider, initialHref, initialMeta = {}) {
         entityKey: stableEntityKey,
         isCurrent(entity, generation) {
           const current = options.readEntity();
-          return generation === currentGeneration && stableEntityKey(current) === stableEntityKey(entity);
-        }
+          return (
+            generation === currentGeneration &&
+            stableEntityKey(current) === stableEntityKey(entity)
+          );
+        },
       };
-    }
+    },
   };
-  vm.runInNewContext(provider === "deezer" ? deezerSource : soundcloudSource, context, {
-    filename: `content/content-${provider}.js`
-  });
+  vm.runInNewContext(
+    provider === "deezer" ? deezerSource : soundcloudSource,
+    context,
+    {
+      filename: `content/content-${provider}.js`,
+    },
+  );
   return {
     context,
     window,
@@ -145,15 +177,24 @@ function loadProvider(provider, initialHref, initialMeta = {}) {
     },
     getNavigationOptions() {
       return navigationOptions;
-    }
+    },
   };
 }
 
 describe("provider SPA metadata guards", () => {
   for (const provider of ["deezer", "soundcloud"]) {
-    const firstUrl = provider === "deezer" ? "https://www.deezer.com/track/41" : "https://soundcloud.com/user/track-a";
-    const nextUrl = provider === "deezer" ? "https://www.deezer.com/track/42" : "https://soundcloud.com/user/track-b";
-    const metadataGlobal = provider === "deezer" ? "RalgrumDeezerMetadata" : "RalgrumSoundCloudMetadata";
+    const firstUrl =
+      provider === "deezer"
+        ? "https://www.deezer.com/track/41"
+        : "https://soundcloud.com/user/track-a";
+    const nextUrl =
+      provider === "deezer"
+        ? "https://www.deezer.com/track/42"
+        : "https://soundcloud.com/user/track-b";
+    const metadataGlobal =
+      provider === "deezer"
+        ? "RalgrumDeezerMetadata"
+        : "RalgrumSoundCloudMetadata";
 
     test(`${provider} does not redisplay pending hydration after autoShow is disabled`, async () => {
       let resolveMetadata;
@@ -162,16 +203,23 @@ describe("provider SPA metadata guards", () => {
       });
       const fixture = loadProvider(provider, nextUrl, {
         "og:url": firstUrl,
-        "og:title": "Previous track"
+        "og:title": "Previous track",
       });
-      fixture.window[metadataGlobal] = { peek: () => null, fetchFor: () => pending };
+      fixture.window[metadataGlobal] = {
+        peek: () => null,
+        fetchFor: () => pending,
+      };
       const navigation = fixture.getNavigationOptions();
       navigation.onRefresh(navigation.readEntity(), 1);
       assert.equal(fixture.shown.length, 0);
 
       fixture.settings.autoShow = false;
       navigation.onRefresh(navigation.readEntity(), 1);
-      resolveMetadata({ title: "Current track", subtitle: "Current artist", authoritative: true });
+      resolveMetadata({
+        title: "Current track",
+        subtitle: "Current artist",
+        authoritative: true,
+      });
       await Promise.resolve();
       await Promise.resolve();
       assert.equal(fixture.shown.length, 0);
@@ -193,11 +241,18 @@ describe("provider SPA metadata guards", () => {
         resolveMetadata = resolve;
       });
       const fixture = loadProvider(provider, firstUrl);
-      fixture.window[metadataGlobal] = { peek: () => null, fetchFor: () => pending };
+      fixture.window[metadataGlobal] = {
+        peek: () => null,
+        fetchFor: () => pending,
+      };
       const navigation = fixture.getNavigationOptions();
       navigation.onRefresh(navigation.readEntity(), 1);
       fixture.deferSettingsReads();
-      resolveMetadata({ title: "API A", subtitle: "Artist A", authoritative: true });
+      resolveMetadata({
+        title: "API A",
+        subtitle: "Artist A",
+        authoritative: true,
+      });
       await Promise.resolve();
       await Promise.resolve();
       assert.equal(fixture.shown.length, 0);
@@ -232,7 +287,7 @@ describe("provider SPA metadata guards", () => {
       "twitter:url": previousUrl,
       "twitter:title": "Previous Twitter title",
       "twitter:audio:artist_name": "Previous Twitter artist",
-      "twitter:image": "https://img/previous-twitter.jpg"
+      "twitter:image": "https://img/previous-twitter.jpg",
     });
     const navigation = fixture.getNavigationOptions();
     navigation.onRefresh(navigation.readEntity(), 1);
@@ -253,7 +308,10 @@ describe("provider SPA metadata guards", () => {
     assert.equal(fixture.shown[1].entity.url, currentUrl);
     assert.equal(fixture.shown[1].values.title, "Current Twitter title");
     assert.equal(fixture.shown[1].values.subtitle, "Current Twitter artist");
-    assert.equal(fixture.shown[1].values.artwork, "https://img/current-twitter.jpg");
+    assert.equal(
+      fixture.shown[1].values.artwork,
+      "https://img/current-twitter.jpg",
+    );
   });
 
   test("Deezer rejects prior-track state and unrelated artist links but retains current-track fallback", () => {
@@ -261,14 +319,19 @@ describe("provider SPA metadata guards", () => {
     const fixture = loadProvider("deezer", currentUrl, {
       "og:url": currentUrl,
       "og:title": "Current track",
-      "og:audio:artist": "Current performer"
+      "og:audio:artist": "Current performer",
     });
     const state = {
       id: "__DZR_APP_STATE__",
-      textContent: JSON.stringify({ DATA: { SNG_ID: "41", ART_NAME: "Previous performer" } })
+      textContent: JSON.stringify({
+        DATA: { SNG_ID: "41", ART_NAME: "Previous performer" },
+      }),
     };
     fixture.hydrationScripts.push(state);
-    fixture.artistLinks.push({ textContent: "Unrelated artist", getAttribute: () => "/artist/9" });
+    fixture.artistLinks.push({
+      textContent: "Unrelated artist",
+      getAttribute: () => "/artist/9",
+    });
     const navigation = fixture.getNavigationOptions();
     navigation.onRefresh(navigation.readEntity(), 1);
     assert.equal(fixture.shown.length, 1);
@@ -279,7 +342,9 @@ describe("provider SPA metadata guards", () => {
     assert.equal(fixture.shown.length, 2);
     assert.equal(fixture.shown[1].values.subtitle, "");
 
-    state.textContent = JSON.stringify({ DATA: { SNG_ID: "42", ART_NAME: "Current state performer" } });
+    state.textContent = JSON.stringify({
+      DATA: { SNG_ID: "42", ART_NAME: "Current state performer" },
+    });
     navigation.onRefresh(navigation.readEntity(), 1);
     assert.equal(fixture.shown.length, 3);
     assert.equal(fixture.shown[2].values.subtitle, "Current state performer");
@@ -294,12 +359,16 @@ describe("provider SPA metadata guards", () => {
     const currentUrl = "https://www.deezer.com/track/42";
     const fixture = loadProvider("deezer", currentUrl, {
       "og:url": "https://www.deezer.com/track/41",
-      "og:title": "Previous track"
+      "og:title": "Previous track",
     });
-    let hydrated = { title: "API track", subtitle: "API artist", explicit: true };
+    let hydrated = {
+      title: "API track",
+      subtitle: "API artist",
+      explicit: true,
+    };
     fixture.window.RalgrumDeezerMetadata = {
       peek: () => null,
-      fetchFor: () => Promise.resolve(hydrated)
+      fetchFor: () => Promise.resolve(hydrated),
     };
     const navigation = fixture.getNavigationOptions();
     navigation.onRefresh(navigation.readEntity(), 1);
@@ -315,9 +384,19 @@ describe("provider SPA metadata guards", () => {
     fixture.meta["og:title"] = "Current DOM track";
     fixture.hydrationScripts.push({
       id: "__DZR_APP_STATE__",
-      textContent: JSON.stringify({ DATA: { SNG_ID: "42", ART_NAME: "DOM artist", EXPLICIT_LYRICS_STATUS: 1 } })
+      textContent: JSON.stringify({
+        DATA: {
+          SNG_ID: "42",
+          ART_NAME: "DOM artist",
+          EXPLICIT_LYRICS_STATUS: 1,
+        },
+      }),
     });
-    hydrated = { title: "API clean track", subtitle: "API artist", explicit: false };
+    hydrated = {
+      title: "API clean track",
+      subtitle: "API artist",
+      explicit: false,
+    };
     navigation.onRefresh(navigation.readEntity(), 1);
     assert.equal(fixture.shown.at(-1).values.explicit, true);
     await Promise.resolve();
@@ -332,14 +411,14 @@ describe("provider SPA metadata guards", () => {
     const currentUrl = "https://www.deezer.com/it/album/42?utm_source=share";
     const fixture = loadProvider("deezer", currentUrl, {
       "og:url": "https://www.deezer.com/album/42",
-      "og:title": "Current album"
+      "og:title": "Current album",
     });
     fixture.scripts.push({
       textContent: JSON.stringify({
         "@type": "MusicAlbum",
         url: "https://www.deezer.com/album/41",
-        byArtist: { name: "Previous artist" }
-      })
+        byArtist: { name: "Previous artist" },
+      }),
     });
     const navigation = fixture.getNavigationOptions();
     navigation.onRefresh(navigation.readEntity(), 1);
@@ -350,8 +429,8 @@ describe("provider SPA metadata guards", () => {
       textContent: JSON.stringify({
         "@type": "MusicAlbum",
         url: "https://www.deezer.com/album/42",
-        byArtist: { name: "Canonical artist" }
-      })
+        byArtist: { name: "Canonical artist" },
+      }),
     });
     navigation.onRefresh(navigation.readEntity(), 1);
     assert.equal(fixture.shown.length, 2);
@@ -362,21 +441,26 @@ describe("provider SPA metadata guards", () => {
   });
 
   test("SoundCloud infers albums only from matching schema and keeps the current private URL", () => {
-    const currentUrl = "https://soundcloud.com/user/sets/release?secret_token=s-private";
+    const currentUrl =
+      "https://soundcloud.com/user/sets/release?secret_token=s-private";
     const fixture = loadProvider("soundcloud", currentUrl, {
       "og:url": "https://soundcloud.com/user/sets/release",
       "og:title": "Current release",
-      "og:audio:artist": "Current artist"
+      "og:audio:artist": "Current artist",
     });
     fixture.scripts.push({
       textContent: JSON.stringify([
         {
           "@type": "MusicAlbum",
           url: "https://soundcloud.com/user/sets/previous",
-          byArtist: { name: "Previous artist" }
+          byArtist: { name: "Previous artist" },
         },
-        { "@type": "MusicAlbum", url: "https://example.com/user/sets/release", byArtist: { name: "Foreign artist" } }
-      ])
+        {
+          "@type": "MusicAlbum",
+          url: "https://example.com/user/sets/release",
+          byArtist: { name: "Foreign artist" },
+        },
+      ]),
     });
     const navigation = fixture.getNavigationOptions();
     navigation.onRefresh(navigation.readEntity(), 1);
@@ -388,8 +472,8 @@ describe("provider SPA metadata guards", () => {
       textContent: JSON.stringify({
         "@type": "MusicAlbum",
         url: "https://soundcloud.com/user/sets/release",
-        byArtist: { name: "Current artist" }
-      })
+        byArtist: { name: "Current artist" },
+      }),
     });
     navigation.onRefresh(navigation.readEntity(), 1);
     assert.equal(fixture.shown.length, 2);
@@ -398,7 +482,11 @@ describe("provider SPA metadata guards", () => {
     assert.equal(album.entity.url, currentUrl);
     assert.equal(album.values.title, "Current release");
     assert.equal(album.values.subtitle, "Current artist");
-    const link = new URL(fixture.detectors.buildRalgrumUrl(album.entity, { title: album.values.title }));
+    const link = new URL(
+      fixture.detectors.buildRalgrumUrl(album.entity, {
+        title: album.values.title,
+      }),
+    );
     assert.equal(link.searchParams.get("type"), "album");
     assert.equal(link.searchParams.get("url"), currentUrl);
 
@@ -419,17 +507,25 @@ describe("provider SPA metadata guards", () => {
     const fixture = loadProvider("soundcloud", currentUrl, {
       "og:url": currentUrl,
       "og:title": "Current track",
-      "og:audio:artist": "Current artist"
+      "og:audio:artist": "Current artist",
     });
-    const currentTrack = { hydratable: "sound", data: { permalink_url: currentUrl, is_explicit: false } };
+    const currentTrack = {
+      hydratable: "sound",
+      data: { permalink_url: currentUrl, is_explicit: false },
+    };
     const otherTrack = {
       hydratable: "sound",
       data: {
         permalink_url: "https://soundcloud.com/user/other-track",
-        is_explicit: true
-      }
+        is_explicit: true,
+      },
     };
-    const script = { textContent: "window.__sc_hydration = " + JSON.stringify([otherTrack, currentTrack]) + ";" };
+    const script = {
+      textContent:
+        "window.__sc_hydration = " +
+        JSON.stringify([otherTrack, currentTrack]) +
+        ";",
+    };
     fixture.hydrationScripts.push(script);
     const navigation = fixture.getNavigationOptions();
     navigation.onRefresh(navigation.readEntity(), 1);
@@ -438,13 +534,17 @@ describe("provider SPA metadata guards", () => {
 
     currentTrack.data.is_explicit = true;
     otherTrack.data.is_explicit = false;
-    script.textContent = "window.__sc_hydration = " + JSON.stringify([otherTrack, currentTrack]) + ";";
+    script.textContent =
+      "window.__sc_hydration = " +
+      JSON.stringify([otherTrack, currentTrack]) +
+      ";";
     navigation.onRefresh(navigation.readEntity(), 1);
     assert.equal(fixture.shown.length, 2);
     assert.equal(fixture.shown[1].values.explicit, true);
 
     otherTrack.data.is_explicit = true;
-    script.textContent = "window.__sc_hydration = " + JSON.stringify([otherTrack]) + ";";
+    script.textContent =
+      "window.__sc_hydration = " + JSON.stringify([otherTrack]) + ";";
     navigation.onRefresh(navigation.readEntity(), 1);
     assert.equal(fixture.shown.length, 3);
     assert.equal(fixture.shown[2].values.explicit, false);
@@ -462,9 +562,12 @@ describe("provider SPA metadata guards", () => {
       "og:url": currentUrl,
       "og:title": "Current track",
       "og:audio:artist": "https://soundcloud.com/user",
-      author: "Display Artist"
+      author: "Display Artist",
     });
-    fixture.window.RalgrumSoundCloudMetadata = { peek: () => null, fetchFor: () => Promise.resolve(null) };
+    fixture.window.RalgrumSoundCloudMetadata = {
+      peek: () => null,
+      fetchFor: () => Promise.resolve(null),
+    };
     const navigation = fixture.getNavigationOptions();
     navigation.onRefresh(navigation.readEntity(), 1);
     await Promise.resolve();
@@ -484,15 +587,21 @@ describe("provider SPA metadata guards", () => {
     const fixture = loadProvider("deezer", "https://www.deezer.com/album/1", {
       "og:url": "https://www.deezer.com/album/1",
       "og:title": "DOM A",
-      "og:audio:artist": "Artist A"
+      "og:audio:artist": "Artist A",
     });
     fixture.window.RalgrumDeezerMetadata = {
       sameEntity: (left, right) =>
-        left && right && left.provider === right.provider && left.type === right.type && left.id === right.id,
+        left &&
+        right &&
+        left.provider === right.provider &&
+        left.type === right.type &&
+        left.id === right.id,
       peek: () => null,
-      fetchFor: () => pending
+      fetchFor: () => pending,
     };
-    const first = fixture.detectors.parseDeezerUrl("https://www.deezer.com/album/1");
+    const first = fixture.detectors.parseDeezerUrl(
+      "https://www.deezer.com/album/1",
+    );
     fixture.getNavigationOptions().onRefresh(first, 1);
     fixture.setHref("https://www.deezer.com/album/2");
     fixture.meta["og:url"] = "https://www.deezer.com/album/2";
@@ -506,23 +615,33 @@ describe("provider SPA metadata guards", () => {
 
   test("Deezer cached API metadata wins over later DOM mutation regressions", async () => {
     let cached = null;
-    const apiValue = { title: "API Album", subtitle: "API Artist", artwork: "https://img/api.jpg" };
+    const apiValue = {
+      title: "API Album",
+      subtitle: "API Artist",
+      artwork: "https://img/api.jpg",
+    };
     const fixture = loadProvider("deezer", "https://www.deezer.com/album/7", {
       "og:url": "https://www.deezer.com/album/7",
       "og:title": "DOM Album",
-      "og:audio:artist": "DOM Artist"
+      "og:audio:artist": "DOM Artist",
     });
     fixture.window.RalgrumDeezerMetadata = {
       sameEntity: (left, right) =>
-        left && right && left.provider === right.provider && left.type === right.type && left.id === right.id,
+        left &&
+        right &&
+        left.provider === right.provider &&
+        left.type === right.type &&
+        left.id === right.id,
       peek: () => cached,
       fetchFor: () =>
         Promise.resolve(apiValue).then((value) => {
           cached = value;
           return value;
-        })
+        }),
     };
-    const entity = fixture.detectors.parseDeezerUrl("https://www.deezer.com/album/7");
+    const entity = fixture.detectors.parseDeezerUrl(
+      "https://www.deezer.com/album/7",
+    );
     fixture.getNavigationOptions().onRefresh(entity, 1);
     await Promise.resolve();
     await Promise.resolve();
@@ -536,20 +655,26 @@ describe("provider SPA metadata guards", () => {
   });
 
   test("SoundCloud rejects stale head and JSON-LD data until the live head is fresh", () => {
-    const fixture = loadProvider("soundcloud", "https://soundcloud.com/user/track-b", {
-      "og:url": "https://soundcloud.com/user/track-a",
-      canonical: "https://soundcloud.com/user/track-a",
-      "og:title": "Track A",
-      "og:audio:artist": "Artist A"
-    });
+    const fixture = loadProvider(
+      "soundcloud",
+      "https://soundcloud.com/user/track-b",
+      {
+        "og:url": "https://soundcloud.com/user/track-a",
+        canonical: "https://soundcloud.com/user/track-a",
+        "og:title": "Track A",
+        "og:audio:artist": "Artist A",
+      },
+    );
     fixture.scripts.push({
       textContent: JSON.stringify({
         "@type": "MusicRecording",
         url: "https://soundcloud.com/user/track-a",
-        byArtist: { name: "Artist A" }
-      })
+        byArtist: { name: "Artist A" },
+      }),
     });
-    const live = fixture.detectors.parseSoundcloudUrl("https://soundcloud.com/user/track-b");
+    const live = fixture.detectors.parseSoundcloudUrl(
+      "https://soundcloud.com/user/track-b",
+    );
     fixture.getNavigationOptions().onRefresh(live, 1);
     assert.equal(fixture.shown.length, 0);
 
@@ -563,20 +688,32 @@ describe("provider SPA metadata guards", () => {
   });
 
   test("SoundCloud does not treat a missing head identity as fresh", () => {
-    const fixture = loadProvider("soundcloud", "https://soundcloud.com/user/track-b", {
-      "og:title": "Stale document title"
-    });
-    const live = fixture.detectors.parseSoundcloudUrl("https://soundcloud.com/user/track-b");
+    const fixture = loadProvider(
+      "soundcloud",
+      "https://soundcloud.com/user/track-b",
+      {
+        "og:title": "Stale document title",
+      },
+    );
+    const live = fixture.detectors.parseSoundcloudUrl(
+      "https://soundcloud.com/user/track-b",
+    );
     fixture.getNavigationOptions().onRefresh(live, 1);
     assert.equal(fixture.shown.length, 0);
   });
 
   test("SoundCloud authoritative oEmbed metadata can render before stale head metadata settles", async () => {
-    const fixture = loadProvider("soundcloud", "https://soundcloud.com/user/track-b", {
-      "og:url": "https://soundcloud.com/user/track-a",
-      "og:title": "Track A"
-    });
-    const live = fixture.detectors.parseSoundcloudUrl("https://soundcloud.com/user/track-b");
+    const fixture = loadProvider(
+      "soundcloud",
+      "https://soundcloud.com/user/track-b",
+      {
+        "og:url": "https://soundcloud.com/user/track-a",
+        "og:title": "Track A",
+      },
+    );
+    const live = fixture.detectors.parseSoundcloudUrl(
+      "https://soundcloud.com/user/track-b",
+    );
     fixture.window.RalgrumSoundCloudMetadata = {
       peek: () => null,
       fetchFor: () =>
@@ -584,8 +721,8 @@ describe("provider SPA metadata guards", () => {
           title: "Track B",
           subtitle: "Artist B",
           artwork: "https://img/b.jpg",
-          authoritative: true
-        })
+          authoritative: true,
+        }),
     };
     fixture.getNavigationOptions().onRefresh(live, 1);
     await Promise.resolve();
@@ -597,15 +734,26 @@ describe("provider SPA metadata guards", () => {
   });
 
   test("SoundCloud cached authoritative metadata wins over later DOM mutations", () => {
-    const fixture = loadProvider("soundcloud", "https://soundcloud.com/user/track-b", {
-      "og:url": "https://soundcloud.com/user/track-b",
-      "og:title": "DOM title",
-      "og:audio:artist": "DOM artist"
-    });
-    const live = fixture.detectors.parseSoundcloudUrl("https://soundcloud.com/user/track-b");
+    const fixture = loadProvider(
+      "soundcloud",
+      "https://soundcloud.com/user/track-b",
+      {
+        "og:url": "https://soundcloud.com/user/track-b",
+        "og:title": "DOM title",
+        "og:audio:artist": "DOM artist",
+      },
+    );
+    const live = fixture.detectors.parseSoundcloudUrl(
+      "https://soundcloud.com/user/track-b",
+    );
     fixture.window.RalgrumSoundCloudMetadata = {
-      peek: () => ({ title: "API title", subtitle: "API artist", artwork: "https://img/api.jpg", authoritative: true }),
-      fetchFor: () => Promise.resolve(null)
+      peek: () => ({
+        title: "API title",
+        subtitle: "API artist",
+        artwork: "https://img/api.jpg",
+        authoritative: true,
+      }),
+      fetchFor: () => Promise.resolve(null),
     };
     fixture.getNavigationOptions().onRefresh(live, 1);
     fixture.meta["og:title"] = "Wrong DOM title";
@@ -618,34 +766,50 @@ describe("provider SPA metadata guards", () => {
   });
 
   test("SoundCloud fresh page artwork survives an oEmbed placeholder", () => {
-    const fixture = loadProvider("soundcloud", "https://soundcloud.com/meddis123/sets/breakbeat-und-bassmukke", {
-      "og:url": "https://soundcloud.com/meddis123/sets/breakbeat-und-bassmukke",
-      "og:title": "breakbeat und bassmukke",
-      "og:image": "https://i1.sndcdn.com/artworks-9CDAHxyyfUZtJX6y-JtpSSQ-t500x500.png"
-    });
+    const fixture = loadProvider(
+      "soundcloud",
+      "https://soundcloud.com/meddis123/sets/breakbeat-und-bassmukke",
+      {
+        "og:url":
+          "https://soundcloud.com/meddis123/sets/breakbeat-und-bassmukke",
+        "og:title": "breakbeat und bassmukke",
+        "og:image":
+          "https://i1.sndcdn.com/artworks-9CDAHxyyfUZtJX6y-JtpSSQ-t500x500.png",
+      },
+    );
     const playlist = fixture.detectors.parseSoundcloudUrl(
-      "https://soundcloud.com/meddis123/sets/breakbeat-und-bassmukke"
+      "https://soundcloud.com/meddis123/sets/breakbeat-und-bassmukke",
     );
     fixture.window.RalgrumSoundCloudMetadata = {
-      peek: () => ({ title: "breakbeat und bassmukke", subtitle: "meddis123", artwork: "", authoritative: true }),
-      fetchFor: () => Promise.resolve(null)
+      peek: () => ({
+        title: "breakbeat und bassmukke",
+        subtitle: "meddis123",
+        artwork: "",
+        authoritative: true,
+      }),
+      fetchFor: () => Promise.resolve(null),
     };
     fixture.getNavigationOptions().onRefresh(playlist, 1);
     assert.equal(fixture.shown.length, 1);
     assert.equal(
       fixture.shown[0].values.artwork,
-      "https://i1.sndcdn.com/artworks-9CDAHxyyfUZtJX6y-JtpSSQ-t500x500.png"
+      "https://i1.sndcdn.com/artworks-9CDAHxyyfUZtJX6y-JtpSSQ-t500x500.png",
     );
-    assert.doesNotMatch(JSON.stringify(fixture.shown[0].values), /fb_placeholder/);
+    assert.doesNotMatch(
+      JSON.stringify(fixture.shown[0].values),
+      /fb_placeholder/,
+    );
   });
 
   test("SoundCloud uses the matching playlist first-track artwork from hydration", () => {
-    const playlistUrl = "https://soundcloud.com/meddis123/sets/breakbeat-und-bassmukke";
-    const firstTrackArtwork = "https://i1.sndcdn.com/artworks-9CDAHxyyfUZtJX6y-JtpSSQ-large.png";
+    const playlistUrl =
+      "https://soundcloud.com/meddis123/sets/breakbeat-und-bassmukke";
+    const firstTrackArtwork =
+      "https://i1.sndcdn.com/artworks-9CDAHxyyfUZtJX6y-JtpSSQ-large.png";
     const fixture = loadProvider("soundcloud", playlistUrl, {
       "og:url": playlistUrl,
       "og:title": "breakbeat und bassmukke",
-      "og:image": "https://soundcloud.com/images/fb_placeholder.png"
+      "og:image": "https://soundcloud.com/images/fb_placeholder.png",
     });
     fixture.hydrationScripts.push({
       textContent:
@@ -655,28 +819,31 @@ describe("provider SPA metadata guards", () => {
             hydratable: "playlist",
             data: {
               permalink_url: playlistUrl,
-              tracks: [{ artwork_url: firstTrackArtwork }]
-            }
-          }
+              tracks: [{ artwork_url: firstTrackArtwork }],
+            },
+          },
         ]) +
-        ";"
+        ";",
     });
     const playlist = fixture.detectors.parseSoundcloudUrl(playlistUrl);
     fixture.window.RalgrumSoundCloudMetadata = {
       peek: () => null,
-      fetchFor: () => Promise.resolve(null)
+      fetchFor: () => Promise.resolve(null),
     };
     fixture.getNavigationOptions().onRefresh(playlist, 1);
     assert.equal(fixture.shown.length, 1);
     assert.equal(fixture.shown[0].values.artwork, firstTrackArtwork);
-    assert.doesNotMatch(JSON.stringify(fixture.shown[0].values), /fb_placeholder/);
+    assert.doesNotMatch(
+      JSON.stringify(fixture.shown[0].values),
+      /fb_placeholder/,
+    );
   });
 
   test("SoundCloud rejects old playlist and foreign first-track artwork", () => {
     const currentUrl = "https://soundcloud.com/meddis123/sets/current-playlist";
     const fixture = loadProvider("soundcloud", currentUrl, {
       "og:url": currentUrl,
-      "og:title": "current playlist"
+      "og:title": "current playlist",
     });
     fixture.hydrationScripts.push({
       textContent:
@@ -685,24 +852,27 @@ describe("provider SPA metadata guards", () => {
           {
             hydratable: "playlist",
             data: {
-              permalink_url: "https://soundcloud.com/meddis123/sets/old-playlist",
-              tracks: [{ artwork_url: "https://i1.sndcdn.com/artworks-old-large.jpg" }]
-            }
+              permalink_url:
+                "https://soundcloud.com/meddis123/sets/old-playlist",
+              tracks: [
+                { artwork_url: "https://i1.sndcdn.com/artworks-old-large.jpg" },
+              ],
+            },
           },
           {
             hydratable: "playlist",
             data: {
               permalink_url: currentUrl,
-              tracks: [{ artwork_url: "https://images.example/foreign.jpg" }]
-            }
-          }
+              tracks: [{ artwork_url: "https://images.example/foreign.jpg" }],
+            },
+          },
         ]) +
-        ";"
+        ";",
     });
     const playlist = fixture.detectors.parseSoundcloudUrl(currentUrl);
     fixture.window.RalgrumSoundCloudMetadata = {
       peek: () => null,
-      fetchFor: () => Promise.resolve(null)
+      fetchFor: () => Promise.resolve(null),
     };
     fixture.getNavigationOptions().onRefresh(playlist, 1);
     assert.equal(fixture.shown.length, 1);
@@ -712,7 +882,7 @@ describe("provider SPA metadata guards", () => {
   test("SoundCloud preserves fresh artist followers when oEmbed author matches the title", () => {
     const fixture = loadProvider("soundcloud", "https://soundcloud.com/forss", {
       "og:url": "https://soundcloud.com/forss",
-      "og:title": "Forss"
+      "og:title": "Forss",
     });
     fixture.scripts.push({
       textContent: JSON.stringify({
@@ -720,19 +890,21 @@ describe("provider SPA metadata guards", () => {
         url: "https://soundcloud.com/forss",
         interactionStatistic: {
           interactionType: "FollowAction",
-          userInteractionCount: 1234
-        }
-      })
+          userInteractionCount: 1234,
+        },
+      }),
     });
-    const artist = fixture.detectors.parseSoundcloudUrl("https://soundcloud.com/forss");
+    const artist = fixture.detectors.parseSoundcloudUrl(
+      "https://soundcloud.com/forss",
+    );
     fixture.window.RalgrumSoundCloudMetadata = {
       peek: () => ({
         title: "Forss",
         subtitle: "",
         artwork: "https://img/forss.jpg",
-        authoritative: true
+        authoritative: true,
       }),
-      fetchFor: () => Promise.resolve(null)
+      fetchFor: () => Promise.resolve(null),
     };
     fixture.getNavigationOptions().onRefresh(artist, 1);
     assert.equal(fixture.shown.length, 1);
@@ -746,15 +918,21 @@ describe("provider SPA metadata guards", () => {
     const pending = new Promise((resolve) => {
       resolveA = resolve;
     });
-    const fixture = loadProvider("soundcloud", "https://soundcloud.com/user/track-a", {
-      "og:url": "https://soundcloud.com/user/track-a",
-      "og:title": "DOM A"
-    });
+    const fixture = loadProvider(
+      "soundcloud",
+      "https://soundcloud.com/user/track-a",
+      {
+        "og:url": "https://soundcloud.com/user/track-a",
+        "og:title": "DOM A",
+      },
+    );
     fixture.window.RalgrumSoundCloudMetadata = {
       peek: () => null,
-      fetchFor: () => pending
+      fetchFor: () => pending,
     };
-    const first = fixture.detectors.parseSoundcloudUrl("https://soundcloud.com/user/track-a");
+    const first = fixture.detectors.parseSoundcloudUrl(
+      "https://soundcloud.com/user/track-a",
+    );
     fixture.getNavigationOptions().onRefresh(first, 1);
     fixture.setHref("https://soundcloud.com/user/track-b");
     fixture.meta["og:url"] = "https://soundcloud.com/user/track-b";

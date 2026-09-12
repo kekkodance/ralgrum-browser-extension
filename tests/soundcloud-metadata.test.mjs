@@ -3,9 +3,18 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { describe, test } from "node:test";
 
-const detectorSource = readFileSync(new URL("../extension/content/detectors.js", import.meta.url), "utf8");
-const spaSource = readFileSync(new URL("../extension/content/spa-navigation.js", import.meta.url), "utf8");
-const metadataSource = readFileSync(new URL("../extension/content/soundcloud-metadata.js", import.meta.url), "utf8");
+const detectorSource = readFileSync(
+  new URL("../extension/content/detectors.js", import.meta.url),
+  "utf8",
+);
+const spaSource = readFileSync(
+  new URL("../extension/content/spa-navigation.js", import.meta.url),
+  "utf8",
+);
+const metadataSource = readFileSync(
+  new URL("../extension/content/soundcloud-metadata.js", import.meta.url),
+  "utf8",
+);
 
 function loadMetadata(responseFactory, options = {}) {
   const calls = [];
@@ -23,7 +32,7 @@ function loadMetadata(responseFactory, options = {}) {
     fetch(url, requestOptions) {
       calls.push({ url, options: requestOptions });
       return responseFactory(url, requestOptions);
-    }
+    },
   };
   const context = {
     window,
@@ -31,18 +40,24 @@ function loadMetadata(responseFactory, options = {}) {
     Promise,
     Date: { now: () => now },
     setTimeout,
-    clearTimeout
+    clearTimeout,
   };
-  vm.runInNewContext(detectorSource, context, { filename: "content/detectors.js" });
-  vm.runInNewContext(spaSource, context, { filename: "content/spa-navigation.js" });
-  vm.runInNewContext(metadataSource, context, { filename: "content/soundcloud-metadata.js" });
+  vm.runInNewContext(detectorSource, context, {
+    filename: "content/detectors.js",
+  });
+  vm.runInNewContext(spaSource, context, {
+    filename: "content/spa-navigation.js",
+  });
+  vm.runInNewContext(metadataSource, context, {
+    filename: "content/soundcloud-metadata.js",
+  });
   return {
     api: window.RalgrumSoundCloudMetadata,
     detectors: window.RalgrumDetectors,
     calls,
     advance(milliseconds) {
       now += milliseconds;
-    }
+    },
   };
 }
 
@@ -64,88 +79,147 @@ function payload(overrides = {}) {
     author_name: "TRVCY",
     author_url: "https://soundcloud.com/imtrvcy",
     thumbnail_url: "https://i1.sndcdn.com/artworks-test-t500x500.jpg",
-    ...overrides
+    ...overrides,
   };
 }
 
 describe("SoundCloud oEmbed metadata", () => {
   test("normalizes track, playlist, and artist metadata", async () => {
-    const fixture = loadMetadata(() => Promise.resolve({ ok: true, json: () => Promise.resolve(payload()) }));
-    const track = await fixture.api.fetchFor(entity(fixture.detectors, "track", "overheat"));
+    const fixture = loadMetadata(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve(payload()) }),
+    );
+    const track = await fixture.api.fetchFor(
+      entity(fixture.detectors, "track", "overheat"),
+    );
     assert.deepEqual(
-      { title: track.title, subtitle: track.subtitle, artwork: track.artwork, authoritative: track.authoritative },
+      {
+        title: track.title,
+        subtitle: track.subtitle,
+        artwork: track.artwork,
+        authoritative: track.authoritative,
+      },
       {
         title: "OVERHEAT",
         subtitle: "TRVCY",
         artwork: "https://i1.sndcdn.com/artworks-test-t500x500.jpg",
-        authoritative: true
-      }
+        authoritative: true,
+      },
     );
 
     const playlist = fixture.api.normalize(
       payload({ title: "Uncaged by Monstercat", author_name: "Monstercat" }),
-      entity(fixture.detectors, "playlist", "mix")
+      entity(fixture.detectors, "playlist", "mix"),
     );
     assert.equal(playlist.title, "Uncaged");
     assert.equal(playlist.subtitle, "Monstercat");
 
     const artist = fixture.api.normalize(
       payload({ title: "Forss", author_name: "Forss" }),
-      entity(fixture.detectors, "artist")
+      entity(fixture.detectors, "artist"),
     );
     assert.equal(artist.title, "Forss");
     assert.equal(artist.subtitle, "");
 
     const placeholder = fixture.api.normalize(
-      payload({ thumbnail_url: "https://soundcloud.com/images/fb_placeholder.png" }),
-      entity(fixture.detectors, "playlist", "placeholder")
+      payload({
+        thumbnail_url: "https://soundcloud.com/images/fb_placeholder.png",
+      }),
+      entity(fixture.detectors, "playlist", "placeholder"),
     );
     assert.equal(placeholder.title, "OVERHEAT");
     assert.equal(placeholder.subtitle, "TRVCY");
     assert.equal(placeholder.artwork, "");
-    assert.equal(fixture.api.isPlaceholderArtwork("https://soundcloud.com/images/fb_placeholder.png"), true);
-    assert.equal(fixture.api.isPlaceholderArtwork("https://i1.sndcdn.com/images/fb_placeholder.png"), false);
+    assert.equal(
+      fixture.api.isPlaceholderArtwork(
+        "https://soundcloud.com/images/fb_placeholder.png",
+      ),
+      true,
+    );
+    assert.equal(
+      fixture.api.isPlaceholderArtwork(
+        "https://i1.sndcdn.com/images/fb_placeholder.png",
+      ),
+      false,
+    );
   });
 
   test("strips only an exact trailing author suffix", () => {
-    const fixture = loadMetadata(() => Promise.resolve({ ok: true, json: () => Promise.resolve(payload()) }));
+    const fixture = loadMetadata(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve(payload()) }),
+    );
     const track = entity(fixture.detectors, "track", "song");
     assert.equal(
-      fixture.api.normalize(payload({ title: "Stand by Me by Artist", author_name: "Artist" }), track).title,
-      "Stand by Me"
+      fixture.api.normalize(
+        payload({ title: "Stand by Me by Artist", author_name: "Artist" }),
+        track,
+      ).title,
+      "Stand by Me",
     );
     assert.equal(
-      fixture.api.normalize(payload({ title: "Stand by Me by Other", author_name: "Artist" }), track).title,
-      "Stand by Me by Other"
+      fixture.api.normalize(
+        payload({ title: "Stand by Me by Other", author_name: "Artist" }),
+        track,
+      ).title,
+      "Stand by Me by Other",
     );
   });
 
   test("rejects unsafe, malformed, and provider-mismatched responses", async () => {
     const fixture = loadMetadata(() =>
-      Promise.resolve({ ok: true, json: () => Promise.resolve(payload({ provider_name: "Other" })) })
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(payload({ provider_name: "Other" })),
+      }),
     );
-    assert.equal(await fixture.api.fetchFor(entity(fixture.detectors, "track")), null);
+    assert.equal(
+      await fixture.api.fetchFor(entity(fixture.detectors, "track")),
+      null,
+    );
 
     const unsafe = loadMetadata(() =>
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve(payload({ thumbnail_url: "http://unsafe.test/image.jpg" }))
-      })
+        json: () =>
+          Promise.resolve(
+            payload({ thumbnail_url: "http://unsafe.test/image.jpg" }),
+          ),
+      }),
     );
-    assert.equal(await unsafe.api.fetchFor(entity(unsafe.detectors, "track")), null);
+    assert.equal(
+      await unsafe.api.fetchFor(entity(unsafe.detectors, "track")),
+      null,
+    );
 
     const badAuthor = loadMetadata(() =>
-      Promise.resolve({ ok: true, json: () => Promise.resolve(payload({ author_url: "https://evil.example/author" })) })
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve(
+            payload({ author_url: "https://evil.example/author" }),
+          ),
+      }),
     );
-    assert.equal(await badAuthor.api.fetchFor(entity(badAuthor.detectors, "track")), null);
+    assert.equal(
+      await badAuthor.api.fetchFor(entity(badAuthor.detectors, "track")),
+      null,
+    );
 
-    const error = loadMetadata(() => Promise.resolve({ ok: false, json: () => Promise.resolve(payload()) }));
-    assert.equal(await error.api.fetchFor(entity(error.detectors, "track")), null);
+    const error = loadMetadata(() =>
+      Promise.resolve({ ok: false, json: () => Promise.resolve(payload()) }),
+    );
+    assert.equal(
+      await error.api.fetchFor(entity(error.detectors, "track")),
+      null,
+    );
   });
 
   test("does not hydrate albums from a matching playlist response", async () => {
-    const fixture = loadMetadata(() => Promise.resolve({ ok: true, json: () => Promise.resolve(payload()) }));
-    const album = fixture.detectors.parseSoundcloudUrl("https://soundcloud.com/user/albums/album");
+    const fixture = loadMetadata(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve(payload()) }),
+    );
+    const album = fixture.detectors.parseSoundcloudUrl(
+      "https://soundcloud.com/user/albums/album",
+    );
     assert.equal(await fixture.api.fetchFor(album), null);
     assert.equal(fixture.calls.length, 0);
     const playlist = entity(fixture.detectors, "playlist", "release");
@@ -194,12 +268,17 @@ describe("SoundCloud oEmbed metadata", () => {
 
   test("bounds successful cache growth", async () => {
     let calls = 0;
-    const fixture = loadMetadata((url) => {
+    const fixture = loadMetadata(() => {
       calls++;
-      return Promise.resolve({ ok: true, json: () => Promise.resolve(payload({ title: "Track " + calls })) });
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(payload({ title: "Track " + calls })),
+      });
     });
     for (let index = 1; index <= 129; index++) {
-      await fixture.api.fetchFor(entity(fixture.detectors, "track", "track-" + index));
+      await fixture.api.fetchFor(
+        entity(fixture.detectors, "track", "track-" + index),
+      );
     }
     assert.equal(fixture.api.cacheSize(), 128);
     await fixture.api.fetchFor(entity(fixture.detectors, "track", "track-1"));
@@ -209,7 +288,9 @@ describe("SoundCloud oEmbed metadata", () => {
   test("bounds retryable failure cache growth", async () => {
     const fixture = loadMetadata(() => Promise.reject(new Error("temporary")));
     for (let index = 1; index <= 129; index++) {
-      await fixture.api.fetchFor(entity(fixture.detectors, "track", "failed-" + index));
+      await fixture.api.fetchFor(
+        entity(fixture.detectors, "track", "failed-" + index),
+      );
     }
     assert.equal(fixture.api.failureCacheSize(), 128);
     assert.equal(fixture.api.cacheSize(), 128);

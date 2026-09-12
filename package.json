@@ -5,10 +5,19 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "build": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "format:write": "prettier --write ."
   },
   "engines": {
     "node": ">=18"
   },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.10.0",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.6"
+  }
 }

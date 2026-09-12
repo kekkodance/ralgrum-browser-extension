@@ -4,12 +4,20 @@
   top: 16px;
   right: 16px;
   z-index: 2147483647;
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 .ralgrum-toast-pill {
   position: fixed;
   top: 16px;
   right: 16px;
   z-index: 2147483647;
-  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-family:
+    "Segoe UI",
+    system-ui,
+    -apple-system,
+    sans-serif;
 }

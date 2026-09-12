@@ -1,6 +1,6 @@
 // Shared SPA route and metadata settling coordinator.
 (function (root) {
-  'use strict';
+  "use strict";
 
   var RETRY_DELAYS_MS = [0, 350, 900, 1800];
   var MUTATION_DEBOUNCE_MS = 500;
@@ -9,42 +9,45 @@
 
   function normalizedSoundcloudUrl(value) {
     try {
-      var parsed = new URL(String(value || ''));
-      if (parsed.protocol !== 'https:' || !/^(?:[a-z0-9-]+\.)*soundcloud\.com$/i.test(parsed.hostname)) {
-        return '';
+      var parsed = new URL(String(value || ""));
+      if (
+        parsed.protocol !== "https:" ||
+        !/^(?:[a-z0-9-]+\.)*soundcloud\.com$/i.test(parsed.hostname)
+      ) {
+        return "";
       }
-      var path = parsed.pathname.replace(/\/+$/, '');
-      return parsed.hostname.toLowerCase() + (path || '/');
+      var path = parsed.pathname.replace(/\/+$/, "");
+      return parsed.hostname.toLowerCase() + (path || "/");
     } catch (e) {
-      return '';
+      return "";
     }
   }
 
   function entityKey(entity) {
     if (!entity || !entity.provider || !entity.type) {
-      return '';
+      return "";
     }
     var provider = String(entity.provider).toLowerCase();
     var type = String(entity.type).toLowerCase();
-    if (provider === 'deezer' && /^\d+$/.test(String(entity.id || ''))) {
-      return provider + ':' + type + ':' + String(entity.id);
+    if (provider === "deezer" && /^\d+$/.test(String(entity.id || ""))) {
+      return provider + ":" + type + ":" + String(entity.id);
     }
-    if (provider === 'soundcloud') {
+    if (provider === "soundcloud") {
       var soundcloudUrl = normalizedSoundcloudUrl(entity.url);
-      return soundcloudUrl ? provider + ':' + type + ':' + soundcloudUrl : '';
+      return soundcloudUrl ? provider + ":" + type + ":" + soundcloudUrl : "";
     }
-    if (entity.id != null && String(entity.id) !== '') {
-      return provider + ':' + type + ':' + String(entity.id);
+    if (entity.id != null && String(entity.id) !== "") {
+      return provider + ":" + type + ":" + String(entity.id);
     }
     return (
       provider +
-      ':' +
+      ":" +
       type +
-      ':' +
-      String(entity.url || '')
-        .split('#')[0]
-        .split('?')[0]
-        .replace(/\/+$/, '')
+      ":" +
+      String(entity.url || "")
+        .split("#")[0]
+        .split("?")[0]
+        .replace(/\/+$/, "")
     );
   }
 
@@ -53,7 +56,7 @@
     var listeners = root;
     var generation = 0;
     var lastKey = null;
-    var lastHref = '';
+    var lastHref = "";
     var refreshTimers = [];
     var mutationTimer = 0;
     var pollTimer = 0;
@@ -61,15 +64,17 @@
 
     function currentHref() {
       try {
-        return String((root.location && root.location.href) || '');
+        return String((root.location && root.location.href) || "");
       } catch (e) {
-        return '';
+        return "";
       }
     }
 
     function readEntity() {
       try {
-        return typeof options.readEntity === 'function' ? options.readEntity() : null;
+        return typeof options.readEntity === "function"
+          ? options.readEntity()
+          : null;
       } catch (e) {
         return null;
       }
@@ -96,11 +101,11 @@
       var entity = readEntity();
       var key = entityKey(entity);
       if (key !== lastKey) {
-        routeChanged('refresh');
+        routeChanged("refresh");
         return;
       }
       try {
-        if (typeof options.onRefresh === 'function') {
+        if (typeof options.onRefresh === "function") {
           options.onRefresh(entity, expectedGeneration);
         }
       } catch (e) {
@@ -138,7 +143,7 @@
         clearRefreshTimers();
         lastKey = key;
         try {
-          if (typeof options.onNavigate === 'function') {
+          if (typeof options.onNavigate === "function") {
             options.onNavigate(entity, generation, reason);
           }
         } catch (e) {
@@ -156,13 +161,13 @@
       }
       mutationTimer = setTimeout(function () {
         mutationTimer = 0;
-        routeChanged('mutation');
+        routeChanged("mutation");
       }, MUTATION_DEBOUNCE_MS);
     }
 
     function installHistoryHook(name) {
       var original = historyObject[name];
-      if (typeof original !== 'function' || original.__ralgrumSpaNavigation) {
+      if (typeof original !== "function" || original.__ralgrumSpaNavigation) {
         return;
       }
       var wrapped = function () {
@@ -175,17 +180,21 @@
     }
 
     function install() {
-      installHistoryHook('pushState');
-      installHistoryHook('replaceState');
-      if (typeof listeners.addEventListener === 'function') {
-        listeners.addEventListener('popstate', function () {
-          routeChanged('popstate');
+      installHistoryHook("pushState");
+      installHistoryHook("replaceState");
+      if (typeof listeners.addEventListener === "function") {
+        listeners.addEventListener("popstate", function () {
+          routeChanged("popstate");
         });
-        listeners.addEventListener('hashchange', function () {
-          routeChanged('hashchange');
+        listeners.addEventListener("hashchange", function () {
+          routeChanged("hashchange");
         });
       }
-      if (typeof root.MutationObserver === 'function' && root.document && root.document.documentElement) {
+      if (
+        typeof root.MutationObserver === "function" &&
+        root.document &&
+        root.document.documentElement
+      ) {
         try {
           var observer = new root.MutationObserver(function (mutations) {
             for (var i = 0; i < mutations.length; i++) {
@@ -193,7 +202,11 @@
               if (target && target.nodeType !== 1) {
                 target = target.parentElement;
               }
-              if (target && target.closest && target.closest('.ralgrum-toast-host')) {
+              if (
+                target &&
+                target.closest &&
+                target.closest(".ralgrum-toast-host")
+              ) {
                 continue;
               }
               queueMutationRefresh();
@@ -205,7 +218,7 @@
             subtree: true,
             attributes: true,
             characterData: true,
-            attributeFilter: ['content', 'href', 'src']
+            attributeFilter: ["content", "href", "src"],
           });
         } catch (e) {
           // The bounded route retries remain available without observation.
@@ -214,10 +227,10 @@
       pollTimer = setInterval(function () {
         var href = currentHref();
         if (href !== lastHref) {
-          routeChanged('poll');
+          routeChanged("poll");
         }
       }, POLL_INTERVAL_MS);
-      routeChanged('initial');
+      routeChanged("initial");
     }
 
     var api = {
@@ -227,8 +240,8 @@
         return generation;
       },
       refresh: function () {
-        routeChanged('manual');
-      }
+        routeChanged("manual");
+      },
     };
     install();
     return {
@@ -244,7 +257,7 @@
           clearInterval(pollTimer);
           pollTimer = 0;
         }
-      }
+      },
     };
   }
 
@@ -255,6 +268,6 @@
         state = createState(options || {});
       }
       return state.api;
-    }
+    },
   };
-})(typeof window !== 'undefined' ? window : globalThis);
+})(typeof window !== "undefined" ? window : globalThis);

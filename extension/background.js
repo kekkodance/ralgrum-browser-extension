@@ -1,9 +1,12 @@
 // Background service worker (Chrome) and background script (Firefox).
 // Owns context menus, settings defaults, and ralgrum:// navigation.
 // URL parsing and link building come from the shared content detector.
-if (typeof RalgrumDetectors === 'undefined' && typeof importScripts === 'function') {
+if (
+  typeof RalgrumDetectors === "undefined" &&
+  typeof importScripts === "function"
+) {
   try {
-    importScripts('content/detectors.js');
+    importScripts("content/detectors.js");
   } catch (e) {
     // Keep startup nonfatal when the shared detector cannot be loaded.
   }
@@ -14,15 +17,15 @@ var RALGRUM_DEFAULTS = {
   showOnTrack: true,
   showOnCollection: true,
   showOnArtist: true,
-  providers: { deezer: true, soundcloud: true }
+  providers: { deezer: true, soundcloud: true },
 };
 function detectorApi() {
-  return typeof RalgrumDetectors !== 'undefined' ? RalgrumDetectors : null;
+  return typeof RalgrumDetectors !== "undefined" ? RalgrumDetectors : null;
 }
 function openRalgrumUrl(url, tabId, done) {
-  var finish = typeof done === 'function' ? done : function () {};
+  var finish = typeof done === "function" ? done : function () {};
   try {
-    if (typeof chrome !== 'undefined' && chrome.tabs && tabId != null) {
+    if (typeof chrome !== "undefined" && chrome.tabs && tabId != null) {
       chrome.tabs.update(tabId, { url: url }, function () {
         var failed = chrome.runtime && chrome.runtime.lastError;
         finish(!failed);
@@ -33,14 +36,14 @@ function openRalgrumUrl(url, tabId, done) {
     // fall through
   }
   try {
-    if (typeof browser !== 'undefined' && browser.tabs && tabId != null) {
+    if (typeof browser !== "undefined" && browser.tabs && tabId != null) {
       Promise.resolve(browser.tabs.update(tabId, { url: url })).then(
         function () {
           finish(true);
         },
         function () {
           finish(false);
-        }
+        },
       );
       return true;
     }
@@ -56,23 +59,27 @@ function withSettingsQueue(operation) {
   // A failed operation must not prevent subsequent settings changes.
   settingsQueue = result.then(
     function () {},
-    function () {}
+    function () {},
   );
   return result;
 }
 function settingsStorageCall(method, value) {
   return new Promise(function (resolve, reject) {
-    var chromeStorage = typeof chrome !== 'undefined' && chrome.storage;
-    var store = chromeStorage ? chrome.storage : typeof browser !== 'undefined' ? browser.storage : null;
+    var chromeStorage = typeof chrome !== "undefined" && chrome.storage;
+    var store = chromeStorage
+      ? chrome.storage
+      : typeof browser !== "undefined"
+        ? browser.storage
+        : null;
     if (!store || !store.sync) {
-      reject(new Error('Settings storage unavailable'));
+      reject(new Error("Settings storage unavailable"));
       return;
     }
     if (chromeStorage) {
       store.sync[method](value, function (items) {
         var error = chrome.runtime && chrome.runtime.lastError;
         if (error) {
-          reject(new Error(error.message || 'Settings storage failed'));
+          reject(new Error(error.message || "Settings storage failed"));
         } else {
           resolve(items);
         }
@@ -84,11 +91,11 @@ function settingsStorageCall(method, value) {
 }
 function persistSettings(key, value) {
   return withSettingsQueue(function () {
-    return settingsStorageCall('get', null).then(function (items) {
+    return settingsStorageCall("get", null).then(function (items) {
       items = items || {};
       var patch = {};
       Object.keys(RALGRUM_DEFAULTS).forEach(function (name) {
-        if (name !== 'providers' && items[name] === undefined) {
+        if (name !== "providers" && items[name] === undefined) {
           patch[name] = RALGRUM_DEFAULTS[name];
         }
       });
@@ -101,7 +108,7 @@ function persistSettings(key, value) {
           patch.providers[name] = RALGRUM_DEFAULTS.providers[name];
         }
       });
-      if (key === 'deezer' || key === 'soundcloud') {
+      if (key === "deezer" || key === "soundcloud") {
         if (!patch.providers) {
           patch.providers = Object.assign({}, providers);
         }
@@ -112,7 +119,7 @@ function persistSettings(key, value) {
       if (!Object.keys(patch).length) {
         return items;
       }
-      return settingsStorageCall('set', patch).then(function () {
+      return settingsStorageCall("set", patch).then(function () {
         return Object.assign({}, items, patch);
       });
     });
@@ -125,13 +132,13 @@ function ensureDefaults() {
 function setSettingMessage(msg) {
   var key = msg.key;
   var validKey =
-    key === 'autoShow' ||
-    key === 'showOnTrack' ||
-    key === 'showOnCollection' ||
-    key === 'showOnArtist' ||
-    key === 'deezer' ||
-    key === 'soundcloud';
-  if (!validKey || typeof msg.value !== 'boolean') {
+    key === "autoShow" ||
+    key === "showOnTrack" ||
+    key === "showOnCollection" ||
+    key === "showOnArtist" ||
+    key === "deezer" ||
+    key === "soundcloud";
+  if (!validKey || typeof msg.value !== "boolean") {
     return Promise.resolve({ ok: false });
   }
   return persistSettings(key, msg.value).then(
@@ -140,38 +147,42 @@ function setSettingMessage(msg) {
     },
     function () {
       return { ok: false };
-    }
+    },
   );
 }
 function setupMenus() {
   try {
-    var chromeMenus = typeof chrome !== 'undefined' && chrome.contextMenus;
-    var menus = chromeMenus ? chrome.contextMenus : typeof browser !== 'undefined' ? browser.menus : null;
+    var chromeMenus = typeof chrome !== "undefined" && chrome.contextMenus;
+    var menus = chromeMenus
+      ? chrome.contextMenus
+      : typeof browser !== "undefined"
+        ? browser.menus
+        : null;
     if (!menus) {
       return;
     }
     function createMenus() {
       menus.create({
-        id: 'ralgrum-page-open',
-        title: 'Open in ralgruM',
-        contexts: ['page'],
+        id: "ralgrum-page-open",
+        title: "Open in ralgruM",
+        contexts: ["page"],
         documentUrlPatterns: [
-          'https://www.deezer.com/*',
-          'https://*.deezer.com/*',
-          'https://soundcloud.com/*',
-          'https://*.soundcloud.com/*'
-        ]
+          "https://www.deezer.com/*",
+          "https://*.deezer.com/*",
+          "https://soundcloud.com/*",
+          "https://*.soundcloud.com/*",
+        ],
       });
       menus.create({
-        id: 'ralgrum-link-open',
-        title: 'Open link in ralgruM',
-        contexts: ['link'],
+        id: "ralgrum-link-open",
+        title: "Open link in ralgruM",
+        contexts: ["link"],
         targetUrlPatterns: [
-          'https://www.deezer.com/*',
-          'https://*.deezer.com/*',
-          'https://soundcloud.com/*',
-          'https://*.soundcloud.com/*'
-        ]
+          "https://www.deezer.com/*",
+          "https://*.deezer.com/*",
+          "https://soundcloud.com/*",
+          "https://*.soundcloud.com/*",
+        ],
       });
     }
     if (chromeMenus) {
@@ -186,11 +197,15 @@ function setupMenus() {
 function onMenuClicked(info, tab) {
   var raw = info.linkUrl || info.pageUrl;
   var detectors = detectorApi();
-  var entity = detectors && detectors.detectFromUrl ? detectors.detectFromUrl(raw) : null;
+  var entity =
+    detectors && detectors.detectFromUrl ? detectors.detectFromUrl(raw) : null;
   if (!entity) {
     return;
   }
-  var url = detectors && detectors.buildRalgrumUrl ? detectors.buildRalgrumUrl(entity) : null;
+  var url =
+    detectors && detectors.buildRalgrumUrl
+      ? detectors.buildRalgrumUrl(entity)
+      : null;
   if (url && tab && tab.id != null) {
     openRalgrumUrl(url, tab.id);
   }
@@ -200,9 +215,9 @@ function init() {
   setupMenus();
   try {
     var rt =
-      typeof chrome !== 'undefined' && chrome.runtime
+      typeof chrome !== "undefined" && chrome.runtime
         ? chrome.runtime
-        : typeof browser !== 'undefined'
+        : typeof browser !== "undefined"
           ? browser.runtime
           : null;
     if (rt && rt.onInstalled) {
@@ -212,9 +227,9 @@ function init() {
       });
     }
     if (rt && rt.onMessage) {
-      var chromeRuntime = typeof chrome !== 'undefined' && chrome.runtime;
+      var chromeRuntime = typeof chrome !== "undefined" && chrome.runtime;
       rt.onMessage.addListener(function (msg, sender, sendResponse) {
-        if (msg && msg.type === 'RALGRUM_SET_SETTING') {
+        if (msg && msg.type === "RALGRUM_SET_SETTING") {
           var response = setSettingMessage(msg);
           if (chromeRuntime) {
             response.then(function (result) {
@@ -226,7 +241,7 @@ function init() {
           }
           return response;
         }
-        if (msg && msg.type === 'RALGRUM_OPEN' && msg.url) {
+        if (msg && msg.type === "RALGRUM_OPEN" && msg.url) {
           var tabId = sender && sender.tab ? sender.tab.id : null;
           if (tabId != null) {
             if (chromeRuntime) {
@@ -254,10 +269,17 @@ function init() {
         return chromeRuntime ? false : Promise.resolve({ ok: false });
       });
     }
-    var menus = typeof chrome !== 'undefined' && chrome.contextMenus ? chrome.contextMenus : null;
+    var menus =
+      typeof chrome !== "undefined" && chrome.contextMenus
+        ? chrome.contextMenus
+        : null;
     if (menus && menus.onClicked) {
       menus.onClicked.addListener(onMenuClicked);
-    } else if (typeof browser !== 'undefined' && browser.menus && browser.menus.onClicked) {
+    } else if (
+      typeof browser !== "undefined" &&
+      browser.menus &&
+      browser.menus.onClicked
+    ) {
       browser.menus.onClicked.addListener(onMenuClicked);
     }
   } catch (e) {

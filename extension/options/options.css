@@ -14,7 +14,7 @@ body {
   background: #09090b;
   color: #fafafa;
   font-family:
-    'Segoe UI',
+    "Segoe UI",
     system-ui,
     -apple-system,
     sans-serif;
@@ -120,7 +120,7 @@ body.is-page .set-wrap {
   border-color: #6366f1;
 }
 .switch::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 2px;
   left: 2px;

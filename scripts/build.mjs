@@ -1,6 +1,12 @@
 // Zero dependency build: emits dist/chrome and dist/firefox from extension/ (v2).
 // Usage: node scripts/build.mjs
-import { cpSync, copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  cpSync,
+  copyFileSync,
+  mkdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -17,11 +23,18 @@ function emit(variant, manifestName) {
       if (base.startsWith("_")) {
         return false;
       }
-      return !p.endsWith("manifest.json") && !p.endsWith("manifest.firefox.json");
+      return (
+        !p.endsWith("manifest.json") && !p.endsWith("manifest.firefox.json")
+      );
     },
   });
   copyFileSync(join(src, manifestName), join(out, "manifest.json"));
-  const note = "Built from extension/ on " + new Date().toISOString() + " for " + variant + ".\n";
+  const note =
+    "Built from extension/ on " +
+    new Date().toISOString() +
+    " for " +
+    variant +
+    ".\n";
   writeFileSync(join(out, "BUILD.txt"), note);
   console.log("built " + out);
 }
