@@ -1,17 +1,16 @@
 name: Release to AMO
 
 # Manual release: Actions -> Release to AMO -> Run workflow, then enter the
-# version number. That version must already be set in extension/manifest.json,
-# extension/manifest.firefox.json, and package.json on master (CI checks this),
-# so bump it in a normal commit first. Needs AMO_API_KEY / AMO_API_SECRET repo
-# secrets (AMO account -> API keys). Submits for listed review; Mozilla signs
-# the add-on after approval, nothing is published instantly.
+# new version number (e.g. 0.2.0). The workflow writes it into the manifests
+# and package files, submits for listed review, and commits the bump back.
+# Needs AMO_API_KEY / AMO_API_SECRET repo secrets (AMO account -> API keys).
+# Mozilla signs the add-on after approval, nothing is published instantly.
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release, e.g. 0.2.0 (must match the manifests)"
+        description: "New version to release, e.g. 0.2.0"
         required: true
       notes:
         description: "Release notes shown on the AMO listing (optional)"
@@ -19,7 +18,11 @@ on:
         default: ""
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: amo-release
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -31,24 +34,27 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Check requested version matches the manifests
+      - name: Set version from input
         env:
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
           node -e "
-            const fs = require('node:fs');
-            const wanted = process.env.RELEASE_VERSION;
-            if (!/^\d+\.\d+\.\d+$/.test(wanted)) {
-              throw new Error('Version must look like 0.2.0, got: ' + wanted);
+            if (!/^\d+\.\d+\.\d+$/.test(process.env.RELEASE_VERSION)) {
+              throw new Error('Version must look like 0.2.0, got: ' + process.env.RELEASE_VERSION);
             }
-            for (const file of ['extension/manifest.json', 'extension/manifest.firefox.json', 'package.json']) {
-              const actual = JSON.parse(fs.readFileSync(file, 'utf8')).version;
-              if (actual !== wanted) {
-                throw new Error(file + ' is version ' + actual + ', not ' + wanted + '. Bump it in a commit first.');
-              }
-            }
-            console.log('releasing version ' + wanted);
           "
+          npm version "$RELEASE_VERSION" --no-git-tag-version --allow-same-version
+          node -e "
+            const fs = require('node:fs');
+            const version = process.env.RELEASE_VERSION;
+            for (const file of ['extension/manifest.json', 'extension/manifest.firefox.json']) {
+              const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
+              manifest.version = version;
+              fs.writeFileSync(file, JSON.stringify(manifest, null, 2) + '\n');
+            }
+          "
+          # JSON.stringify expands arrays Prettier keeps on one line, so renormalize.
+          npx prettier --write extension/manifest.json extension/manifest.firefox.json package.json package-lock.json
       - run: npm run lint
       - run: npm run format:check
       - run: npm test
@@ -67,3 +73,11 @@ jobs:
           ARGS=(--zip dist/firefox.zip --version "$RELEASE_VERSION" --slug ralgrum-browser-extension)
           if [ -n "$RELEASE_NOTES" ]; then ARGS+=(--notes "$RELEASE_NOTES"); fi
           node scripts/amo-submit.mjs "${ARGS[@]}"
+      - name: Commit version bump back
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add extension/manifest.json extension/manifest.firefox.json package.json package-lock.json
+          git diff --cached --quiet && echo "versions already set, nothing to commit" || (git commit -m "Bump version to $RELEASE_VERSION" && git push origin HEAD)
