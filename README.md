@@ -10,7 +10,7 @@
 ## What it does
 
 - Works on Deezer and SoundCloud song, album, playlist, and artist pages.
-- Shows a small pop-up box with the title, artist, and cover picture.
+- Shows a small toast with the title, artist, and cover picture.
 - One click to **Play in ralgruM** (for songs) or **Open in ralgruM** (for albums, playlists, and artists).
 - On song pages, you also get quick shortcuts to the album and artist when available.
 - Right-click any Deezer or SoundCloud page or link and choose **Open in ralgruM**.
@@ -35,7 +35,7 @@ You need:
 1. Open `chrome://extensions` in Chrome.
 2. Turn on **Developer mode** (switch in the top-right corner).
 3. Click **Load unpacked** and choose the `extension/` folder or `dist/chrome` if you ran a build.
-4. Go to a Deezer or SoundCloud song page. You should see the ralgruM box in the top-right.
+4. Go to a Deezer or SoundCloud song page. You should see the toast in the top-right.
 
 ### Firefox
 
@@ -44,7 +44,7 @@ Firefox 142 or newer is required.
 1. Run `npm run build` to create the `dist/firefox` folder.
 2. Open `about:debugging#/runtime/this-firefox`.
 3. Click **Load Temporary Add-on** and pick the `manifest.json` file inside `dist/firefox`.
-4. Go to a Deezer or SoundCloud song page. You should see the ralgruM box in the top-right.
+4. Go to a Deezer or SoundCloud song page. You should see the toast in the top-right.
 
 A temporary add-on is removed when you restart Firefox.
 
@@ -70,9 +70,9 @@ Other ways to use it:
 
 ## Settings
 
-Click the ralgruM toolbar icon to change when the box appears.
+Click the ralgruM toolbar icon to change when the toast appears.
 
-- **Show toast automatically** - turn the pop-up box on or off everywhere.
+- **Show toast automatically** - turn the toast on or off everywhere.
 - **Tracks** - show it on song pages.
 - **Albums and playlists** - show it on album and playlist pages.
 - **Artists** - show it on artist pages.
@@ -82,12 +82,12 @@ Changes apply immediately.
 
 ## Privacy
 
-- We do not track you. There are no ads, no analytics, and no ralgruM servers collecting your browsing.
-- To show the title and cover picture, the add-on reads the page you are on. If it needs more detail, it asks Deezer (`api.deezer.com`) or SoundCloud (`soundcloud.com/oembed`) for that song, album, playlist, or artist. This happens when the box is turned on, before you click anything.
+- We do not track you. There are no ads, no analytics, and no Murglar servers collecting your browsing.
+- To show the title and cover picture, the add-on reads the page you are on. If it needs more detail, it asks Deezer (`api.deezer.com`) or SoundCloud (`soundcloud.com/oembed`) for that song, album, playlist, or artist. This happens when the toast is turned on, before you click anything.
 - Cover pictures load from Deezer, SoundCloud, or their image hosts, like normal images in your browser.
 - Your on/off settings are saved in your browser and may follow your browser account if you use browser sync. Your browsing history is not saved.
 - Clicking **Play** or **Open** sends that song, album, playlist, or artist to the ralgruM app on your computer. What the app does next is up to the app.
-- The music sites themselves still work exactly as before, these controls only affect the ralgruM box.
+- The music sites themselves still work exactly as before, these controls only affect the toast
 
 ## For developers
 
