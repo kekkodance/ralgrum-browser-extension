@@ -2,12 +2,13 @@
   <h1>
     <img src="extension/icons/icon128.png" width="48" height="48" valign="middle" alt="ralgruM logo" />
     ralgruM Browser Integration
+    <p>
+      <img src="https://img.shields.io/github/actions/workflow/status/kekkodance/ralgrum-browser-extension/ci.yml?label=checks" alt="CI status" />
+    </p>
   </h1>
+
   <p>This browser add-on connects Deezer and SoundCloud pages to the ralgruM Desktop app.</p>
   <p>When you are looking at a song, album, playlist, or artist in your browser, a small toast pops up in the top-right corner.</p>
-  <p>
-    <img src="https://img.shields.io/github/actions/workflow/status/kekkodance/ralgrum-browser-extension/ci.yml?label=checks" alt="CI status" />
-  </p>
 </div>
 
 ## What it does
