@@ -1,105 +1,113 @@
-# ralgruM Browser Integration
+<div align="center">
+  <h1>
+    <img src="extension/icons/icon128.png" width="48" height="48" style="vertical-align:middle" alt="ralgruM logo" />
+    ralgruM Browser Integration
+  </h1>
+  <p>This browser add-on connects Deezer and SoundCloud pages to the ralgruM Desktop app.</p>
+</div>
 
-Browser extension for Chrome and Firefox that connects Deezer and SoundCloud
-pages to the ralgruM desktop app.
+When you are looking at a song, album, playlist, or artist in your browser, a small toast pops up in the top-right corner. One click sends it to ralgruM so you can play it there without copying and pasting links.
 
-When you visit a track, album, playlist, or artist page, a small toast in the
-ralgruM style appears in the top right. From there you can play the track in
-ralgruM or open the album, playlist, or artist page in ralgruM with one click.
+## What it does
 
-## Features
+- Works on Deezer and SoundCloud song, album, playlist, and artist pages.
+- Shows a small pop-up box with the title, artist, and cover picture.
+- One click to **Play in ralgruM** (for songs) or **Open in ralgruM** (for albums, playlists, and artists).
+- On song pages, you also get quick shortcuts to the album and artist when available.
+- Right-click any Deezer or SoundCloud page or link and choose **Open in ralgruM**.
+- Remembers your choices — there is no Save button, everything applies right away.
 
-- Toast dialog in the top right on Deezer and SoundCloud pages
-- Visual style matched to ralgruM (dark zinc theme, indigo accent,
-  Deezer purple and SoundCloud orange provider badges)
-- Detects tracks, albums, playlists, and artists, including related entities
-  on track pages (album and artist shortcuts)
-- One click Play in ralgruM or Open in ralgruM via the ralgrum:// protocol
-- Copy ralgruM link or original page link
-- Context menu entries for pages and links
-- Toolbar button opens the settings directly, toggles save instantly
-- Toast mirrors the app toast anatomy (flat card, kind glyph, secondary
-  actions) and the expanded dialog lists entities as track rows
-- Settings match the app settings panels, no save button needed
-- Firefox and Chrome builds from one source (Manifest V3)
-- No tracking, everything runs locally in your browser
+## Before you start
 
-## How it works
+You need:
 
-1. The content script detects the entity from the page URL plus meta tags
-   and JSON-LD data.
-2. The toast builds a ralgrum:// link such as
-   ralgrum://open?provider=deezer&type=track&id=3135556&action=play
-3. Clicking the button navigates to that URL, which Windows hands to the
-   registered ralgruM protocol handler (see protocol/).
-4. ralgruM parses the link and opens the matching page or starts playback.
+1. The **ralgruM Desktop app** installed on the same computer.
+2. **Chrome** or **Firefox 142 or newer**.
+3. Access to Deezer or SoundCloud in your browser, as usual.
 
-Full URL spec lives in protocol/README.md. Reference Rust parser lives in
-app-integration/deep_link.rs.
-
-## Repo layout
-
-- extension/ - the extension source (manifests, background, content scripts,
-  popup, options, icons)
-- protocol/ - ralgrum:// spec plus Windows register and unregister scripts
-- app-integration/ - reference Rust parser plus wiring guide for the ralgruM app
-- tests/ - zero dependency Node tests for the URL parsers
-- scripts/ - zero dependency build script producing dist/chrome and dist/firefox
-
-## Install from source
+## Set it up
 
 ### Chrome
 
-1. Open chrome://extensions, enable Developer mode.
-2. Click Load unpacked and pick the extension/ folder (or dist/chrome after
-   npm run build).
-3. Visit a Deezer or SoundCloud page and look top right.
+1. Open `chrome://extensions` in Chrome.
+2. Turn on **Developer mode** (switch in the top-right corner).
+3. Click **Load unpacked** and choose the `extension/` folder — or `dist/chrome` if you ran a build.
+4. Go to a Deezer or SoundCloud song page. You should see the ralgruM box in the top-right.
 
 ### Firefox
 
-1. Run npm run build to produce dist/firefox.
-2. Open about:debugging#/runtime/this-firefox, click Load Temporary Add-on,
-   pick dist/firefox/manifest.json.
-3. For a signed permanent install, submit dist/firefox.zip to
-   addons.mozilla.org as an unlisted or listed add-on.
+Firefox 142 or newer is required.
 
-Note: extension/manifest.json targets Chrome. extension/manifest.firefox.json
-targets Firefox. The build script picks the right one per output folder.
+1. Run `npm run build` to create the `dist/firefox` folder.
+2. Open `about:debugging#/runtime/this-firefox`.
+3. Click **Load Temporary Add-on** and pick the `manifest.json` file inside `dist/firefox`.
+4. Go to a Deezer or SoundCloud song page. You should see the ralgruM box in the top-right.
 
-## Register ralgruM to handle ralgrum:// links (Windows)
+A temporary add-on is removed when you restart Firefox.
 
-Run in PowerShell (no admin needed, current user only):
 
-powershell -ExecutionPolicy Bypass -File protocol/windows-register-protocol.ps1
+### Connect it to the ralgruM app
 
-If ralgruM.exe is not in the default location, pass -ExePath:
+Clicking **Play** or **Open** asks your computer to open the link in ralgruM.
 
-powershell -ExecutionPolicy Bypass -File protocol/windows-register-protocol.ps1 -ExePath "C:/path/to/ralgruM.exe"
+- The first time, your browser may ask which app to use. Choose ralgruM and allow it to open these links.
+- If nothing happens when you click, make sure the ralgruM desktop app is installed and up to date.
 
-To remove the handler:
+## How to use it
 
-powershell -ExecutionPolicy Bypass -File protocol/windows-unregister-protocol.ps1
+1. Go to a song, album, playlist, or artist on Deezer or SoundCloud.
+2. Look for the small toast in the top-right corner.
+3. Click **Play in ralgruM** or **Open in ralgruM**.
+4. Click the **X** to dismiss the toast.
 
-## Development
+Other ways to use it:
 
-- npm test runs the parser tests (Node 18 or newer, no dependencies).
-- npm run build produces dist/chrome and dist/firefox plus zip notes.
-- Content logic in extension/content/detectors.js is pure and testable,
-  no chrome APIs inside that file.
-- Toast UI uses Shadow DOM so Deezer and SoundCloud page styles cannot leak in.
+- Right-click the page and choose **Open in ralgruM**.
+- Right-click a Deezer or SoundCloud link and choose **Open link in ralgruM**.
+- Click the ralgruM icon in your browser toolbar to open settings.
 
-## Privacy
+## Settings — make it yours
 
-- No analytics, no network calls, no remote servers.
-- The extension only reads the current page URL, title, artwork meta tags,
-  and JSON-LD blocks to build a local ralgrum:// link.
-- Settings stay in browser storage (chrome.storage.sync with local fallback).
+Click the ralgruM toolbar icon to change when the box appears.
+
+- **Show toast automatically** — turn the pop-up box on or off everywhere.
+- **Tracks** — show it on song pages.
+- **Albums and playlists** — show it on album and playlist pages.
+- **Artists** — show it on artist pages.
+- **Deezer / SoundCloud** — turn it on or off for each music site.
+
+Changes apply immediately.
+
+## Privacy 
+
+- We do not track you. There are no ads, no analytics, and no ralgruM servers collecting your browsing.
+- To show the title and cover picture, the add-on reads the page you are on. If it needs more detail, it asks Deezer (`api.deezer.com`) or SoundCloud (`soundcloud.com/oembed`) for that song, album, playlist, or artist. This happens when the box is turned on, before you click anything.
+- Cover pictures load from Deezer, SoundCloud, or their image hosts, like normal images in your browser.
+- Your on/off settings are saved in your browser and may follow your browser account if you use browser sync. Your browsing history is not saved.
+- Clicking **Play** or **Open** sends that song, album, playlist, or artist to the ralgruM app on your computer. What the app does next is up to the app.
+- The music sites themselves still work exactly as before, these controls only affect the ralgruM box.
 
 ## Screenshots
 
-Placeholder: add screenshots/toast-deezer.png and screenshots/toast-soundcloud.png
-showing the top right toast on a track page.
+<div align="center">
+  <img src="screenshots/toast-deezer.png" alt="ralgruM toast on a Deezer song page with a Play in ralgruM button" width="360" />
+  <img src="screenshots/toast-soundcloud.png" alt="ralgruM toast on a SoundCloud song page with a Play in ralgruM button" width="360" />
+  <p>The ralgruM box on a Deezer song page (left) and a SoundCloud song page (right).</p>
+</div>
+
+## For developers
+
+Source layout:
+
+- `extension/` — the add-on (background, page scripts, pop-up, settings page, icons).
+- `tests/` — checks that run with plain Node.js, no extra installs needed.
+- `scripts/` — build script that creates `dist/chrome` and `dist/firefox`.
+
+Useful commands (Node 18 or newer):
+
+- `npm test` — run the checks.
+- `npm run build` — build the Chrome and Firefox folders in `dist/`. Store-upload files (ZIPs) are created manually afterwards.
 
 ## License
 
-MIT, see LICENSE.
+Copyright © 2026 kekkodance. All rights reserved. See LICENSE.

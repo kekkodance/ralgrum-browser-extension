@@ -33,13 +33,13 @@
   "content_scripts": [
     {
       "matches": ["https://www.deezer.com/*", "https://*.deezer.com/*"],
-      "js": ["content/detectors.js", "content/toast.js", "content/content-deezer.js"],
+      "js": ["content/detectors.js", "content/deezer-metadata.js", "content/spa-navigation.js", "content/toast.js", "content/content-deezer.js"],
       "css": ["content/toast.css"],
       "run_at": "document_idle"
     },
     {
       "matches": ["https://soundcloud.com/*", "https://*.soundcloud.com/*"],
-      "js": ["content/detectors.js", "content/toast.js", "content/content-soundcloud.js"],
+      "js": ["content/detectors.js", "content/spa-navigation.js", "content/soundcloud-metadata.js", "content/toast.js", "content/content-soundcloud.js"],
       "css": ["content/toast.css"],
       "run_at": "document_idle"
     }

@@ -1,5 +1,4 @@
 // Settings logic shared by the options page and the toolbar popup.
-// Every toggle persists immediately, like update_draft_and_persist.
 (function () {
   'use strict';
   var DEFAULTS = {
@@ -10,61 +9,158 @@
     providers: { deezer: true, soundcloud: true }
   };
   var IDS = ['autoShow', 'showOnTrack', 'showOnCollection', 'showOnArtist', 'deezer', 'soundcloud'];
-  function store() {
-    try {
-      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
-        return chrome.storage.sync;
-      }
-      if (typeof browser !== 'undefined' && browser.storage && browser.storage.sync) {
-        return browser.storage.sync;
-      }
-    } catch (e) {
-      // ignore
-    }
-    return null;
+
+  function settingValue(settings, id) {
+    var provider = id === 'deezer' || id === 'soundcloud';
+    var source = provider ? settings.providers : settings;
+    var fallback = provider ? DEFAULTS.providers[id] : DEFAULTS[id];
+    return source && typeof source[id] === 'boolean' ? source[id] : fallback;
   }
-  function readValues() {
-    return {
-      autoShow: document.getElementById('autoShow').checked,
-      showOnTrack: document.getElementById('showOnTrack').checked,
-      showOnCollection: document.getElementById('showOnCollection').checked,
-      showOnArtist: document.getElementById('showOnArtist').checked,
-      providers: {
-        deezer: document.getElementById('deezer').checked,
-        soundcloud: document.getElementById('soundcloud').checked
-      }
-    };
-  }
-  function applyValues(v) {
-    document.getElementById('autoShow').checked = !!v.autoShow;
-    document.getElementById('showOnTrack').checked = !!v.showOnTrack;
-    document.getElementById('showOnCollection').checked = !!v.showOnCollection;
-    document.getElementById('showOnArtist').checked = !!v.showOnArtist;
-    document.getElementById('deezer').checked = v.providers.deezer !== false;
-    document.getElementById('soundcloud').checked = v.providers.soundcloud !== false;
-  }
+
   document.addEventListener('DOMContentLoaded', function () {
-    var s = store();
-    function persist() {
-      if (s) {
-        s.set(readValues());
+    var api = null;
+    var promiseApi = false;
+    if (typeof browser !== 'undefined' && browser.storage && browser.storage.sync) {
+      api = browser;
+      promiseApi = true;
+    } else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+      api = chrome;
+    }
+
+    var loaded = false;
+    var authoritative = {};
+    var pending = {};
+    var queue = [];
+    var saving = false;
+    var revision = 0;
+    var changedAt = {};
+    var controls = {};
+
+    function render() {
+      IDS.forEach(function (id) {
+        controls[id].checked = pending[id] ? pending[id].value : authoritative[id];
+        controls[id].disabled = !loaded;
+      });
+    }
+
+    function callApi(owner, method, args) {
+      if (promiseApi) {
+        return Promise.resolve().then(function () {
+          return owner[method].apply(owner, args);
+        });
       }
+      return new Promise(function (resolve, reject) {
+        owner[method].apply(
+          owner,
+          args.concat(function (result) {
+            var error = api.runtime && api.runtime.lastError;
+            if (error) reject(new Error(error.message || 'Extension request failed'));
+            else resolve(result);
+          })
+        );
+      });
     }
+
+    function applySnapshot(settings, startedAt) {
+      IDS.forEach(function (id) {
+        // A storage event received during this request is newer than its snapshot.
+        if (changedAt[id] <= startedAt) {
+          authoritative[id] = settingValue(settings || {}, id);
+        }
+      });
+    }
+
+    function refresh() {
+      var startedAt = revision;
+      return callApi(api.storage.sync, 'get', [null]).then(function (settings) {
+        applySnapshot(settings, startedAt);
+      });
+    }
+
+    async function saveQueuedChanges() {
+      if (saving) return;
+      saving = true;
+      while (queue.length) {
+        var change = queue[0];
+        var startedAt = revision;
+        try {
+          var response = await callApi(api.runtime, 'sendMessage', [
+            {
+              type: 'RALGRUM_SET_SETTING',
+              key: change.key,
+              value: change.value
+            }
+          ]);
+          if (!response || response.ok !== true || !response.settings) {
+            throw new Error('Setting was not saved');
+          }
+          applySnapshot(response.settings, startedAt);
+        } catch (error) {
+          // Failed writes must not leave the optimistic checkbox as a saved value.
+          try {
+            await refresh();
+          } catch (readError) {
+            // Retain the last known authoritative values if storage is unavailable.
+          }
+        }
+        queue.shift();
+        if (pending[change.key] === change) delete pending[change.key];
+        render();
+      }
+      saving = false;
+    }
+
     IDS.forEach(function (id) {
-      document.getElementById(id).addEventListener('change', persist);
-    });
-    if (!s) {
-      applyValues(DEFAULTS);
-      return;
-    }
-    s.get(null, function (items) {
-      applyValues({
-        autoShow: items.autoShow !== undefined ? items.autoShow : DEFAULTS.autoShow,
-        showOnTrack: items.showOnTrack !== undefined ? items.showOnTrack : DEFAULTS.showOnTrack,
-        showOnCollection: items.showOnCollection !== undefined ? items.showOnCollection : DEFAULTS.showOnCollection,
-        showOnArtist: items.showOnArtist !== undefined ? items.showOnArtist : DEFAULTS.showOnArtist,
-        providers: items.providers || DEFAULTS.providers
+      controls[id] = document.getElementById(id);
+      authoritative[id] = settingValue(DEFAULTS, id);
+      changedAt[id] = 0;
+      controls[id].addEventListener('change', function () {
+        if (!loaded) {
+          render();
+          return;
+        }
+        if (!api) {
+          authoritative[id] = controls[id].checked;
+          return;
+        }
+        var change = { key: id, value: controls[id].checked };
+        pending[id] = change;
+        queue.push(change);
+        saveQueuedChanges();
       });
     });
+    render();
+
+    if (!api) {
+      // Standalone previews are editable, but never attempt persistence.
+      loaded = true;
+      render();
+      return;
+    }
+
+    api.storage.onChanged.addListener(function (changes, area) {
+      if (area !== 'sync') return;
+      revision += 1;
+      IDS.forEach(function (id) {
+        var key = id === 'deezer' || id === 'soundcloud' ? 'providers' : id;
+        if (!Object.prototype.hasOwnProperty.call(changes, key)) return;
+        var settings = {};
+        settings[key] = changes[key].newValue;
+        authoritative[id] = settingValue(settings, id);
+        changedAt[id] = revision;
+      });
+      render();
+    });
+
+    refresh().then(
+      function () {
+        loaded = true;
+        render();
+      },
+      function () {
+        // Keep controls disabled rather than offering writes against an unread store.
+        render();
+      }
+    );
   });
 })();

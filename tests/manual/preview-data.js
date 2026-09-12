@@ -150,10 +150,17 @@
           var ent = { provider: 'deezer', type: 'track', id: '999', url: 'https://www.deezer.com/track/999' };
           var first = RalgrumToast.showOncePerPage(ent, { title: '', subtitle: '' });
           var second = RalgrumToast.showOncePerPage(ent, { title: 'Late Title', subtitle: 'Late Artist' });
-          var third = RalgrumToast.showOncePerPage(ent, { title: 'Late Title', subtitle: 'Late Artist' });
-          var fresh = document.querySelector('.ralgrum-toast-host').shadowRoot;
-          var lateTitle = fresh.querySelector('.rg-ttitle');
-          out.restale = { first: first, second: second, third: third, rendered: lateTitle ? lateTitle.textContent : null };
+          out.restale = { first: first, second: second, settled: false };
+          setTimeout(function () {
+            var third = RalgrumToast.showOncePerPage(ent, { title: 'Late Title', subtitle: 'Late Artist' });
+            var host = document.querySelector('.ralgrum-toast-host');
+            var scope = host && (host.shadowRoot || host);
+            var lateTitle = scope && scope.querySelector('.rg-ttitle');
+            out.restale.third = third;
+            out.restale.rendered = lateTitle ? lateTitle.textContent : null;
+            out.restale.settled = true;
+            document.title = 'METRICS:' + JSON.stringify(out);
+          }, 1200);
         }
       document.title = 'METRICS:' + JSON.stringify(out);
     }, 600);

@@ -4,11 +4,11 @@
   "description": "Browser integration for ralgruM: open Deezer and SoundCloud pages in the ralgruM desktop app",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/url-parser.test.mjs",
+    "test": "node --test",
     "build": "node scripts/build.mjs"
   },
   "engines": {
     "node": ">=18"
   },
-  "license": "MIT"
+  "license": "UNLICENSED"
 }

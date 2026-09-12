@@ -6,7 +6,10 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "ralgrum-integration@ralgrum.app",
-      "strict_min_version": "109.0"
+      "data_collection_permissions": {
+        "required": ["browsingActivity", "websiteContent"]
+      },
+      "strict_min_version": "142.0"
     }
   },
   "permissions": ["storage", "contextMenus", "activeTab"],
@@ -17,7 +20,7 @@
     "https://*.soundcloud.com/*"
   ],
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["content/detectors.js", "background.js"]
   },
   "action": {
     "default_title": "ralgruM",
@@ -30,7 +33,12 @@
   "web_accessible_resources": [
     {
       "resources": ["icons/icon16.png", "icons/icon32.png", "icons/icon48.png", "icons/icon128.png"],
-      "matches": ["https://www.deezer.com/*", "https://*.deezer.com/*", "https://soundcloud.com/*", "https://*.soundcloud.com/*"]
+      "matches": [
+        "https://www.deezer.com/*",
+        "https://*.deezer.com/*",
+        "https://soundcloud.com/*",
+        "https://*.soundcloud.com/*"
+      ]
     }
   ],
   "icons": {
@@ -42,13 +50,25 @@
   "content_scripts": [
     {
       "matches": ["https://www.deezer.com/*", "https://*.deezer.com/*"],
-      "js": ["content/detectors.js", "content/toast.js", "content/content-deezer.js"],
+      "js": [
+        "content/detectors.js",
+        "content/deezer-metadata.js",
+        "content/spa-navigation.js",
+        "content/toast.js",
+        "content/content-deezer.js"
+      ],
       "css": ["content/toast.css"],
       "run_at": "document_idle"
     },
     {
       "matches": ["https://soundcloud.com/*", "https://*.soundcloud.com/*"],
-      "js": ["content/detectors.js", "content/toast.js", "content/content-soundcloud.js"],
+      "js": [
+        "content/detectors.js",
+        "content/spa-navigation.js",
+        "content/soundcloud-metadata.js",
+        "content/toast.js",
+        "content/content-soundcloud.js"
+      ],
       "css": ["content/toast.css"],
       "run_at": "document_idle"
     }

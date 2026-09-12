@@ -1,30 +1,87 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ralgruM</title>
-<link rel="stylesheet" href="../options/options.css" />
-</head>
-<body class="is-popup">
-<div class="set-wrap">
-<div class="set-head">
-<h1 class="set-title">Browser Integration</h1>
-<p class="set-copy">Choose when the ralgruM toast appears.</p>
-</div>
-<div class="set-card">
-<div class="set-cardhead"><svg width="13" height="13" viewBox="0 0 512 512" aria-hidden="true"><path fill="#a1a1aa" d="M0 352L0 128C0 75 43 32 96 32l320 0c53 0 96 43 96 96l0 224c0 53-43 96-96 96l-120 0c-5.2 0-10.2 1.7-14.4 4.8L166.4 539.2c-4.2 3.1-9.2 4.8-14.4 4.8-13.3 0-24-10.7-24-24l0-72-32 0c-53 0-96-43-96-96z"/></svg><span>Toast</span></div>
-<div class="set-row"><div class="set-row-main"><p class="set-row-label">Show toast automatically</p><p class="set-row-desc">Show on supported pages.</p></div><input type="checkbox" class="switch" checked id="autoShow" aria-label="Show toast automatically" /></div>
-<div class="set-row"><div class="set-row-main"><p class="set-row-label">Tracks</p><p class="set-row-desc">Show on track pages.</p></div><input type="checkbox" class="switch" checked id="showOnTrack" aria-label="Show on tracks" /></div>
-<div class="set-row"><div class="set-row-main"><p class="set-row-label">Albums and playlists</p><p class="set-row-desc">Show on album and playlist pages.</p></div><input type="checkbox" class="switch" checked id="showOnCollection" aria-label="Show on albums and playlists" /></div>
-<div class="set-row"><div class="set-row-main"><p class="set-row-label">Artists</p><p class="set-row-desc">Show on artist pages.</p></div><input type="checkbox" class="switch" checked id="showOnArtist" aria-label="Show on artists" /></div>
-</div>
-<div class="set-card">
-<div class="set-cardhead"><svg width="13" height="13" viewBox="0 0 448 512" aria-hidden="true"><path fill="#a1a1aa" d="M64 32C28.7 32 0 60.7 0 96l0 64c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-64c0-35.3-28.7-64-64-64L64 32zm216 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm56 24a24 24 0 1 1 48 0 24 24 0 1 1 -48 0zM64 288c-35.3 0-64 28.7-64 64l0 64c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-64c0-35.3-28.7-64-64-64L64 288zm216 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm56 24a24 24 0 1 1 48 0 24 24 0 1 1 -48 0z"/></svg><span>Providers</span></div>
-<div class="set-row"><div class="set-row-main"><p class="set-row-label">Deezer</p><p class="set-row-desc">Enable on Deezer pages.</p></div><input type="checkbox" class="switch" checked id="deezer" aria-label="Enable on Deezer" /></div>
-<div class="set-row"><div class="set-row-main"><p class="set-row-label">SoundCloud</p><p class="set-row-desc">Enable on SoundCloud pages.</p></div><input type="checkbox" class="switch" checked id="soundcloud" aria-label="Enable on SoundCloud" /></div>
-</div>
-</div>
-<script src="../options/options.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ralgruM</title>
+    <link rel="stylesheet" href="../options/options.css" />
+  </head>
+  <body class="is-popup">
+    <div class="set-wrap">
+      <div class="set-head">
+        <h1 class="set-title">Browser Integration</h1>
+        <p class="set-copy">Choose when the ralgruM toast appears.</p>
+      </div>
+      <div class="set-card">
+        <div class="set-cardhead">
+          <svg width="13" height="13" viewBox="0 0 512 512" aria-hidden="true">
+            <path
+              fill="#a1a1aa"
+              d="M0 352L0 128C0 75 43 32 96 32l320 0c53 0 96 43 96 96l0 224c0 53-43 96-96 96l-120 0c-5.2 0-10.2 1.7-14.4 4.8L166.4 539.2c-4.2 3.1-9.2 4.8-14.4 4.8-13.3 0-24-10.7-24-24l0-72-32 0c-53 0-96-43-96-96z"
+            /></svg
+          ><span>Toast</span>
+        </div>
+        <div class="set-row">
+          <div class="set-row-main">
+            <p class="set-row-label">Show toast automatically</p>
+            <p class="set-row-desc">Show on supported pages.</p>
+          </div>
+          <input type="checkbox" class="switch" checked disabled id="autoShow" aria-label="Show toast automatically" />
+        </div>
+        <div class="set-row">
+          <div class="set-row-main">
+            <p class="set-row-label">Tracks</p>
+            <p class="set-row-desc">Show on track pages.</p>
+          </div>
+          <input type="checkbox" class="switch" checked disabled id="showOnTrack" aria-label="Show on tracks" />
+        </div>
+        <div class="set-row">
+          <div class="set-row-main">
+            <p class="set-row-label">Albums and playlists</p>
+            <p class="set-row-desc">Show on album and playlist pages.</p>
+          </div>
+          <input
+            type="checkbox"
+            class="switch"
+            checked
+            disabled
+            id="showOnCollection"
+            aria-label="Show on albums and playlists"
+          />
+        </div>
+        <div class="set-row">
+          <div class="set-row-main">
+            <p class="set-row-label">Artists</p>
+            <p class="set-row-desc">Show on artist pages.</p>
+          </div>
+          <input type="checkbox" class="switch" checked disabled id="showOnArtist" aria-label="Show on artists" />
+        </div>
+      </div>
+      <div class="set-card">
+        <div class="set-cardhead">
+          <svg width="13" height="13" viewBox="0 0 448 512" aria-hidden="true">
+            <path
+              fill="#a1a1aa"
+              d="M64 32C28.7 32 0 60.7 0 96l0 64c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-64c0-35.3-28.7-64-64-64L64 32zm216 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm56 24a24 24 0 1 1 48 0 24 24 0 1 1 -48 0zM64 288c-35.3 0-64 28.7-64 64l0 64c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-64c0-35.3-28.7-64-64-64L64 288zm216 72a24 24 0 1 1 0 48 24 24 0 1 1 0-48zm56 24a24 24 0 1 1 48 0 24 24 0 1 1 -48 0z"
+            /></svg
+          ><span>Providers</span>
+        </div>
+        <div class="set-row">
+          <div class="set-row-main">
+            <p class="set-row-label">Deezer</p>
+            <p class="set-row-desc">Enable on Deezer pages.</p>
+          </div>
+          <input type="checkbox" class="switch" checked disabled id="deezer" aria-label="Enable on Deezer" />
+        </div>
+        <div class="set-row">
+          <div class="set-row-main">
+            <p class="set-row-label">SoundCloud</p>
+            <p class="set-row-desc">Enable on SoundCloud pages.</p>
+          </div>
+          <input type="checkbox" class="switch" checked disabled id="soundcloud" aria-label="Enable on SoundCloud" />
+        </div>
+      </div>
+    </div>
+    <script src="../options/options.js"></script>
+  </body>
 </html>

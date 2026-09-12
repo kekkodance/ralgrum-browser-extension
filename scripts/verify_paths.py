@@ -1,12 +1,46 @@
+import argparse
 from pathlib import Path
-import re
-toast = Path("C:/Users/Kekko/Desktop/ralgrum-browser-integration/extension/content/toast.js").read_text(encoding="utf-8")
-line = [ln for ln in toast.splitlines() if "return /^https" in ln][0]
-print("isWebUrl line:", line.strip())
-REF = "C:/Users/Kekko/Desktop/ralgrum-refactor/assets/icons/fontawesome-free-7.3.1"
-for name, src in (("DEEZER_PATH", REF + "/brands/deezer.svg"), ("SOUNDCLOUD_PATH", REF + "/brands/soundcloud.svg"), ("XMARK_PATH", REF + "/solid/xmark.svg"), ("MUSIC_PATH", REF + "/solid/music.svg")):
-    disk = re.search(r'd="([^"]+)"', Path(src).read_text(encoding="utf-8")).group(1)
-    m = re.search(r"var " + name + r" = (.*?);", toast, re.S)
-    injected = m.group(1).replace(" ", "").replace(chr(10), "").replace("+", "").replace("'", "")
-    disk_flat = disk.replace(" ", "")
-    print(name, "disk:", len(disk), "injected:", len(injected), "match:", injected == disk_flat)
+import sys
+import xml.etree.ElementTree as ET
+
+from inject_paths import (
+    DEFAULT_SOURCE_DIR,
+    DEFAULT_TOAST,
+    PATH_SOURCES,
+    injected_paths,
+    path_of,
+)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        description="Verify the exact SVG path data embedded in toast.js."
+    )
+    parser.add_argument("--toast", type=Path, default=DEFAULT_TOAST)
+    parser.add_argument("--source-dir", type=Path, default=DEFAULT_SOURCE_DIR)
+    args = parser.parse_args(argv)
+    try:
+        injected = injected_paths(args.toast.read_bytes().decode("utf-8"))
+        matches = True
+        for name, relative in PATH_SOURCES.items():
+            disk = path_of(args.source_dir / relative)
+            value = injected.get(name)
+            match = value == disk
+            print(
+                name,
+                "disk:",
+                len(disk),
+                "injected:",
+                len(value) if value is not None else "missing",
+                "match:",
+                match,
+            )
+            matches = matches and match
+        return 0 if matches else 1
+    except (OSError, ValueError, ET.ParseError) as error:
+        print(f"verify_paths: {error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
