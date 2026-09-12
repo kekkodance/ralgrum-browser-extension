@@ -6,6 +6,10 @@
   <p>
     <img src="https://img.shields.io/github/actions/workflow/status/kekkodance/ralgrum-browser-extension/ci.yml?label=checks" alt="CI status" />
   </p>
+  <p>This browser add-on connects Deezer and SoundCloud pages to the ralgruM Desktop app.</p>
+  <p>When you are looking at a song, album, playlist, or artist in your browser, a small toast pops up in the top-right corner.</p>
+</div>
+
   <table align="center">
     <tr>
       <th>Browser</th>
@@ -13,20 +17,17 @@
     </tr>
     <tr>
       <td>
-        <a href="https://addons.mozilla.org/en-US/firefox/addon/ralgrum-browser-integration/"><img src="docs/logos/firefox.svg" width="32" height="32" alt="Firefox" /></a>
+        <a href="https://addons.mozilla.org/en-US/firefox/addon/ralgrum-browser-integration/"><img src="docs/logos/firefox.svg" width="64" height="64" alt="Firefox" /></a>
       </td>
       <td><a href="https://addons.mozilla.org/en-US/firefox/addon/ralgrum-browser-integration/">Firefox Add-ons</a></td>
     </tr>
     <tr>
       <td>
-        <a href="#chrome"><img src="docs/logos/chrome.svg" width="32" height="32" alt="Chrome" /></a>
+        <a href="#chrome"><img src="docs/logos/chrome.svg" width="64" height="64" alt="Chrome" /></a>
       </td>
       <td><a href="#chrome">Install instructions</a></td>
     </tr>
   </table>
-  <p>This browser add-on connects Deezer and SoundCloud pages to the ralgruM Desktop app.</p>
-  <p>When you are looking at a song, album, playlist, or artist in your browser, a small toast pops up in the top-right corner.</p>
-</div>
 
 ## What it does
 
