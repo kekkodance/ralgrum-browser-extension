@@ -15,7 +15,6 @@ When you are looking at a song, album, playlist, or artist in your browser, a sm
 - One click to **Play in ralgruM** (for songs) or **Open in ralgruM** (for albums, playlists, and artists).
 - On song pages, you also get quick shortcuts to the album and artist when available.
 - Right-click any Deezer or SoundCloud page or link and choose **Open in ralgruM**.
-- Remembers your choices — there is no Save button, everything applies right away.
 
 <div align="center">
   <img src="screenshots/toast-deezer.png" alt="ralgruM toast on a Deezer song page with a Play in ralgruM button" width="360" />
@@ -36,7 +35,7 @@ You need:
 
 1. Open `chrome://extensions` in Chrome.
 2. Turn on **Developer mode** (switch in the top-right corner).
-3. Click **Load unpacked** and choose the `extension/` folder — or `dist/chrome` if you ran a build.
+3. Click **Load unpacked** and choose the `extension/` folder or `dist/chrome` if you ran a build.
 4. Go to a Deezer or SoundCloud song page. You should see the ralgruM box in the top-right.
 
 ### Firefox
@@ -71,15 +70,15 @@ Other ways to use it:
 - Right-click a Deezer or SoundCloud link and choose **Open link in ralgruM**.
 - Click the ralgruM icon in your browser toolbar to open settings.
 
-## Settings — make it yours
+## Settings
 
 Click the ralgruM toolbar icon to change when the box appears.
 
-- **Show toast automatically** — turn the pop-up box on or off everywhere.
-- **Tracks** — show it on song pages.
-- **Albums and playlists** — show it on album and playlist pages.
-- **Artists** — show it on artist pages.
-- **Deezer / SoundCloud** — turn it on or off for each music site.
+- **Show toast automatically** - turn the pop-up box on or off everywhere.
+- **Tracks** - show it on song pages.
+- **Albums and playlists** - show it on album and playlist pages.
+- **Artists** - show it on artist pages.
+- **Deezer / SoundCloud** - turn it on or off for each music site.
 
 Changes apply immediately.
 
@@ -96,14 +95,14 @@ Changes apply immediately.
 
 Source layout:
 
-- `extension/` — the add-on (background, page scripts, pop-up, settings page, icons).
-- `tests/` — checks that run with plain Node.js, no extra installs needed.
-- `scripts/` — build script that creates `dist/chrome` and `dist/firefox`.
+- `extension/` - the add-on (background, page scripts, pop-up, settings page, icons).
+- `tests/` - checks that run with plain Node.js, no extra installs needed.
+- `scripts/` - build script that creates `dist/chrome` and `dist/firefox`.
 
 Useful commands (Node 18 or newer):
 
-- `npm test` — run the checks.
-- `npm run build` — build the Chrome and Firefox folders in `dist/`. Store-upload files (ZIPs) are created manually afterwards.
+- `npm test` - run the checks.
+- `npm run build` - build the Chrome and Firefox folders in `dist/`. Store-upload files (ZIPs) are created manually afterwards.
 
 ## License
 
