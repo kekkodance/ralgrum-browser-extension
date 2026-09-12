@@ -4,9 +4,10 @@
     ralgruM Browser Integration
   </h1>
   <p>This browser add-on connects Deezer and SoundCloud pages to the ralgruM Desktop app.</p>
+  <p>When you are looking at a song, album, playlist, or artist in your browser, a small toast pops up in the top-right corner.</p>
 </div>
 
-When you are looking at a song, album, playlist, or artist in your browser, a small toast pops up in the top-right corner.
+
 ## What it does
 
 - Works on Deezer and SoundCloud song, album, playlist, and artist pages.
