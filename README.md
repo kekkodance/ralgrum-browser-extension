@@ -50,7 +50,7 @@ You need:
 2. **Chrome** or **Firefox 142 or newer**.
 3. Access to Deezer or SoundCloud in your browser, as usual.
 
-## Set it up
+## Install
 
 ### Chrome
 
@@ -59,16 +59,16 @@ You need:
 3. Click **Load unpacked** and choose the `extension/` folder or `dist/chrome` if you ran a build.
 4. Go to a Deezer or SoundCloud song page. You should see the toast in the top-right.
 
-### Firefox
+### Firefox (temporary add-on)
 
-Firefox 142 or newer is required.
+Firefox 142 or newer is required. The preferred way to install the extension is via the button above.
+
+A temporary add-on is removed when you restart Firefox.
 
 1. Run `npm run build` to create the `dist/firefox` folder.
 2. Open `about:debugging#/runtime/this-firefox`.
 3. Click **Load Temporary Add-on** and pick the `manifest.json` file inside `dist/firefox`.
 4. Go to a Deezer or SoundCloud song page. You should see the toast in the top-right.
-
-A temporary add-on is removed when you restart Firefox.
 
 ### Connect it to the ralgruM app
 
@@ -99,8 +99,6 @@ Click the ralgruM toolbar icon to change when the toast appears.
 - **Albums and playlists** - show it on album and playlist pages.
 - **Artists** - show it on artist pages.
 - **Deezer / SoundCloud** - turn it on or off for each music site.
-
-Changes apply immediately.
 
 ## Privacy
 
