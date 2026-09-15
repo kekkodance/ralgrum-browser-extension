@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ralgruM Browser Integration",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Open Deezer and SoundCloud tracks, albums, playlists, and artists in ralgruM.",
   "permissions": ["storage", "contextMenus", "activeTab"],
   "host_permissions": [

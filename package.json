@@ -1,6 +1,6 @@
 {
   "name": "ralgrum-browser-integration",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Browser integration for ralgruM: open Deezer and SoundCloud pages in the ralgruM desktop app",
   "type": "module",
   "scripts": {
