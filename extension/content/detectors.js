@@ -67,6 +67,25 @@
     }
   }
 
+  // Profile tabs (e.g. /artist/tracks) render the artist's own page with a
+  // tab selected, so they stay the artist entity, addressed by the canonical
+  // profile URL.
+  var SOUNDCLOUD_ARTIST_TABS = [
+    "tracks",
+    "albums",
+    "sets",
+    "popular-tracks",
+    "reposts",
+  ];
+
+  function canonicalSoundcloudArtistUrl(url, slug) {
+    try {
+      return new URL(String(url)).origin + "/" + slug;
+    } catch (e) {
+      return String(url);
+    }
+  }
+
   function parseSoundcloudUrl(url) {
     var segs = soundcloudPathSegments(url);
     if (!segs || segs.length === 0) {
@@ -93,12 +112,16 @@
     if (reserved.indexOf(lowered[0]) !== -1) {
       return null;
     }
-    if (segs.length === 1) {
+    var isArtistTab =
+      segs.length === 2 && SOUNDCLOUD_ARTIST_TABS.indexOf(lowered[1]) !== -1;
+    if (segs.length === 1 || isArtistTab) {
       return {
         provider: "soundcloud",
         type: "artist",
         id: null,
-        url: String(url),
+        url: isArtistTab
+          ? canonicalSoundcloudArtistUrl(url, segs[0])
+          : String(url),
       };
     }
     if (lowered[1] === "sets" || lowered.indexOf("sets") !== -1) {

@@ -733,6 +733,32 @@ describe("provider SPA metadata guards", () => {
     assert.equal(fixture.shown[0].values.authoritative, true);
   });
 
+  test("SoundCloud artist profile tabs keep the artist entity on the toast", () => {
+    const artistUrl = "https://soundcloud.com/spacelaces-ids";
+    const fixture = loadProvider("soundcloud", artistUrl, {
+      "og:url": artistUrl,
+      "og:title": "SPACELACES",
+      "soundcloud:follower_count": "1200",
+    });
+    const navigation = fixture.getNavigationOptions();
+    navigation.onRefresh(navigation.readEntity(), 1);
+    assert.equal(fixture.shown.length, 1);
+    assert.equal(fixture.shown[0].entity.type, "artist");
+    assert.equal(fixture.shown[0].entity.url, artistUrl);
+    assert.equal(fixture.shown[0].values.subtitle, "1,200 followers");
+
+    fixture.setHref(artistUrl + "/tracks");
+    fixture.meta["og:url"] = artistUrl + "/tracks";
+    const afterTab = navigation.readEntity();
+    const keyOf = fixture.window.RalgrumSpaNavigation.entityKey;
+    assert.equal(keyOf(afterTab), keyOf(fixture.shown[0].entity));
+    navigation.onRefresh(afterTab, 1);
+    assert.equal(fixture.shown.length, 2);
+    assert.equal(fixture.shown[1].entity.type, "artist");
+    assert.equal(fixture.shown[1].entity.url, artistUrl);
+    assert.equal(fixture.shown[1].values.subtitle, "1,200 followers");
+  });
+
   test("SoundCloud cached authoritative metadata wins over later DOM mutations", () => {
     const fixture = loadProvider(
       "soundcloud",

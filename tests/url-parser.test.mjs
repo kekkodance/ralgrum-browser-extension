@@ -122,6 +122,27 @@ describe("SoundCloud pages", () => {
     );
   });
 
+  it("treats artist profile tabs as the artist with a canonical URL", () => {
+    for (const tab of [
+      "tracks",
+      "albums",
+      "sets",
+      "popular-tracks",
+      "reposts",
+    ]) {
+      const entity = detectors.parseSoundcloudUrl(
+        `https://soundcloud.com/SomeArtist/${tab}`,
+      );
+      assert.equal(entity.type, "artist", tab);
+      assert.equal(entity.url, "https://soundcloud.com/SomeArtist", tab);
+    }
+    const withQuery = detectors.parseSoundcloudUrl(
+      "https://soundcloud.com/someartist/tracks?foo=1",
+    );
+    assert.equal(withQuery.type, "artist");
+    assert.equal(withQuery.url, "https://soundcloud.com/someartist");
+  });
+
   it("requires HTTPS and rejects every reserved top-level route", () => {
     const reserved = [
       "you",
