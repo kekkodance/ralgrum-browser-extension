@@ -12,7 +12,7 @@
 
   <table align="center">
     <tr>
-      <th></th>
+      <th>Platform</th>
       <th>Install from</th>
     </tr>
     <tr>
