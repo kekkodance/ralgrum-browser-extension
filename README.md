@@ -134,7 +134,7 @@ Source layout:
 Useful commands (Node 18 or newer):
 
 - `npm test` - run the checks.
-- `npm run build` - build the Chrome and Firefox folders in `dist/` and refresh `userscript/ralgrum.user.js`. Store-upload files (ZIPs) are created manually afterwards.
+- `npm run build` - build the Chrome and Firefox folders in `dist/` and refresh `userscript/ralgrum.user.js`. GitHub Actions also refreshes and commits the userscript bundle after branch pushes. Store-upload files (ZIPs) are created manually afterwards.
 - `npm run lint` - run ESLint.
 - `npm run format:check` - check formatting with Prettier (`npm run format:write` fixes it).
 
