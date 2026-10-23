@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ralgruM Browser Integration
 // @namespace    https://github.com/kekkodance/ralgrum-browser-extension
-// @version      0.1.1
+// @version      0.1.1.5
 // @description  Open Deezer and SoundCloud tracks, albums, playlists, and artists in ralgruM.
 // @match        https://www.deezer.com/*
 // @match        https://*.deezer.com/*
