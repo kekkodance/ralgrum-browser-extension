@@ -1,5 +1,6 @@
 dist/
 screenshots/
 userscript/
+docs/logos/greasemonkey.svg
 extension/icons/*.png
 extension/icons/*.svg
