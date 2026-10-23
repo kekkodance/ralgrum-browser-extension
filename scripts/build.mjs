@@ -81,6 +81,9 @@ function emitUserscript() {
     "// ==/UserScript==",
   ].join("\n");
   const style = readFileSync(join(src, "content", "toast.css"), "utf8");
+  const logoDataUrl =
+    "data:image/png;base64," +
+    readFileSync(join(src, "icons", "icon32.png")).toString("base64");
   const content = sources
     .map((file) => {
       return (
@@ -93,6 +96,9 @@ function emitUserscript() {
     .join("\n\n");
   const styleSetup =
     "(function () {\n" +
+    "  window.RalgrumEmbeddedLogoUrl = " +
+    JSON.stringify(logoDataUrl) +
+    ";\n" +
     '  var style = document.createElement("style");\n' +
     "  style.textContent = " +
     JSON.stringify(style) +

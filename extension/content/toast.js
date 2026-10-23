@@ -106,6 +106,12 @@
     return provider + ":" + type + ":" + (url || String(entity.id || ""));
   }
   function resolveLogoUrl() {
+    if (
+      typeof root.RalgrumEmbeddedLogoUrl === "string" &&
+      root.RalgrumEmbeddedLogoUrl
+    ) {
+      return root.RalgrumEmbeddedLogoUrl;
+    }
     try {
       if (
         typeof chrome !== "undefined" &&
