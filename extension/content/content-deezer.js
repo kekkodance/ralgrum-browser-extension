@@ -2,6 +2,9 @@
 // Runs at document_idle, observes SPA navigation, respects stored settings.
 (function () {
   "use strict";
+  if (!/^(?:[a-z0-9-]+\.)*deezer\.com$/i.test(window.location.hostname)) {
+    return;
+  }
   function getMeta(prop) {
     var el =
       document.querySelector('meta[property="' + prop + '"]') ||

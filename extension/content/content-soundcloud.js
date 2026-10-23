@@ -2,6 +2,9 @@
 // Uses URL plus JSON-LD and meta tags, observes SPA navigation.
 (function () {
   "use strict";
+  if (!/^(?:[a-z0-9-]+\.)*soundcloud\.com$/i.test(window.location.hostname)) {
+    return;
+  }
   function getMeta(prop) {
     var el =
       document.querySelector('meta[property="' + prop + '"]') ||
