@@ -27,6 +27,10 @@
       </td>
       <td><a href="#chrome">Install instructions</a></td>
     </tr>
+    <tr>
+      <td>Userscript manager</td>
+      <td><a href="https://raw.githubusercontent.com/kekkodance/ralgrum-browser-extension/master/userscript/ralgrum.user.js">Install userscript</a></td>
+    </tr>
   </table>
 
 ## What it does
@@ -47,7 +51,7 @@
 You need:
 
 1. The **ralgruM Desktop app** installed on the same computer.
-2. **Chrome** or **Firefox 142 or newer**.
+2. **Chrome** or **Firefox 142 or newer** for the browser add-on, or a compatible userscript manager for the userscript.
 3. Access to Deezer or SoundCloud in your browser, as usual.
 
 ## Install
@@ -70,6 +74,12 @@ A temporary add-on is removed when you restart Firefox.
 3. Click **Load Temporary Add-on** and pick the `manifest.json` file inside `dist/firefox`.
 4. Go to a Deezer or SoundCloud song page. You should see the toast in the top-right.
 
+### Userscript manager
+
+Install a userscript manager that works with your browser, then open [ralgrum.user.js](https://raw.githubusercontent.com/kekkodance/ralgrum-browser-extension/master/userscript/ralgrum.user.js) and confirm the installation prompt. The script updates from this GitHub file through your userscript manager.
+
+The userscript shows the same automatic toast as the browser add-on. It does not include the toolbar settings or right-click menu; enable or disable it from your userscript manager.
+
 ### Connect it to the ralgruM app
 
 Clicking **Play** or **Open** asks your computer to open the link in ralgruM.
@@ -86,11 +96,10 @@ Clicking **Play** or **Open** asks your computer to open the link in ralgruM.
 
 Other ways to use it:
 
-- Right-click the page and choose **Open in ralgruM**.
-- Right-click a Deezer or SoundCloud link and choose **Open link in ralgruM**.
-- Click the ralgruM icon in your browser toolbar to open settings.
+- With the browser add-on, right-click the page and choose **Open in ralgruM**, or right-click a Deezer or SoundCloud link and choose **Open link in ralgruM**.
+- With the browser add-on, click the ralgruM icon in your browser toolbar to open settings.
 
-## Settings
+## Browser add-on settings
 
 Click the ralgruM toolbar icon to change when the toast appears.
 
@@ -100,12 +109,14 @@ Click the ralgruM toolbar icon to change when the toast appears.
 - **Artists** - show it on artist pages.
 - **Deezer / SoundCloud** - turn it on or off for each music site.
 
+The userscript does not have these settings. Use your userscript manager to disable or remove it.
+
 ## Privacy
 
 - We do not track you. There are no ads, no analytics, and no Murglar servers collecting your browsing.
-- To show the title and cover picture, the add-on reads the page you are on. If it needs more detail, it asks Deezer (`api.deezer.com`) or SoundCloud (`soundcloud.com/oembed`) for that song, album, playlist, or artist. This happens when the toast is turned on, before you click anything.
+- To show the title and cover picture, the integration reads the page you are on. If it needs more detail, it asks Deezer (`api.deezer.com`) or SoundCloud (`soundcloud.com/oembed`) for that song, album, playlist, or artist. This happens when the toast is enabled, before you click anything.
 - Cover pictures load from Deezer, SoundCloud, or their image hosts, like normal images in your browser.
-- Your on/off settings are saved in your browser and may follow your browser account if you use browser sync. Your browsing history is not saved.
+- Browser add-on settings are saved in your browser and may follow your browser account if you use browser sync. The userscript has no separate settings; enable or disable it in the userscript manager. Your browsing history is not saved.
 - Clicking **Play** or **Open** sends that song, album, playlist, or artist to the ralgruM app on your computer. What the app does next is up to the app.
 - The music sites themselves still work exactly as before, these controls only affect the toast
 
@@ -114,13 +125,14 @@ Click the ralgruM toolbar icon to change when the toast appears.
 Source layout:
 
 - `extension/` - the add-on (background, page scripts, pop-up, settings page, icons).
+- `userscript/ralgrum.user.js` - generated, installable userscript bundle.
 - `tests/` - checks that run with plain Node.js (`npm test` needs no extra installs; lint and format need `npm install` first).
-- `scripts/` - build script that creates `dist/chrome` and `dist/firefox`.
+- `scripts/` - build script that creates the Chrome and Firefox folders in `dist/` and generates the userscript bundle.
 
 Useful commands (Node 18 or newer):
 
 - `npm test` - run the checks.
-- `npm run build` - build the Chrome and Firefox folders in `dist/`. Store-upload files (ZIPs) are created manually afterwards.
+- `npm run build` - build the Chrome and Firefox folders in `dist/` and refresh `userscript/ralgrum.user.js`. Store-upload files (ZIPs) are created manually afterwards.
 - `npm run lint` - run ESLint.
 - `npm run format:check` - check formatting with Prettier (`npm run format:write` fixes it).
 

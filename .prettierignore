@@ -1,4 +1,5 @@
 dist/
 screenshots/
+userscript/
 extension/icons/*.png
 extension/icons/*.svg
