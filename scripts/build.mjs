@@ -48,7 +48,7 @@ emit("firefox", "manifest.firefox.json");
 function emitUserscript() {
   const output = join(root, "userscript", "ralgrum.user.js");
   const updateUrl =
-    "https://raw.githubusercontent.com/kekkodance/ralgrum-browser-extension/master/userscript/ralgrum.user.js";
+    "https://github.com/kekkodance/ralgrum-browser-extension/raw/refs/heads/master/userscript/ralgrum.user.js";
   const sources = [
     "extension/content/detectors.js",
     "userscript/menu.js",
