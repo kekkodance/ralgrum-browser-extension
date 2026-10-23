@@ -59,11 +59,15 @@ function emitUserscript() {
     "extension/content/content-deezer.js",
     "extension/content/content-soundcloud.js",
   ];
+  const runNumber = process.env.GITHUB_RUN_NUMBER;
+  const userscriptVersion = /^\d+$/.test(runNumber || "")
+    ? packageInfo.version + "." + runNumber
+    : packageInfo.version;
   const metadata = [
     "// ==UserScript==",
     "// @name         ralgruM Browser Integration",
     "// @namespace    https://github.com/kekkodance/ralgrum-browser-extension",
-    "// @version      " + packageInfo.version,
+    "// @version      " + userscriptVersion,
     "// @description  Open Deezer and SoundCloud tracks, albums, playlists, and artists in ralgruM.",
     "// @match        https://www.deezer.com/*",
     "// @match        https://*.deezer.com/*",
