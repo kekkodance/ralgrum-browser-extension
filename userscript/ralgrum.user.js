@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ralgruM Browser Integration
 // @namespace    https://github.com/kekkodance/ralgrum-browser-extension
-// @version      0.1.1.5
+// @version      0.1.1.6
 // @description  Open Deezer and SoundCloud tracks, albums, playlists, and artists in ralgruM.
 // @match        https://www.deezer.com/*
 // @match        https://*.deezer.com/*
@@ -2017,6 +2017,9 @@
 // Runs at document_idle, observes SPA navigation, respects stored settings.
 (function () {
   "use strict";
+  if (!/^(?:[a-z0-9-]+\.)*deezer\.com$/i.test(window.location.hostname)) {
+    return;
+  }
   function getMeta(prop) {
     var el =
       document.querySelector('meta[property="' + prop + '"]') ||
@@ -2695,6 +2698,9 @@
 // Uses URL plus JSON-LD and meta tags, observes SPA navigation.
 (function () {
   "use strict";
+  if (!/^(?:[a-z0-9-]+\.)*soundcloud\.com$/i.test(window.location.hostname)) {
+    return;
+  }
   function getMeta(prop) {
     var el =
       document.querySelector('meta[property="' + prop + '"]') ||
