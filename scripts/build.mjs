@@ -50,13 +50,14 @@ function emitUserscript() {
   const updateUrl =
     "https://raw.githubusercontent.com/kekkodance/ralgrum-browser-extension/master/userscript/ralgrum.user.js";
   const sources = [
-    "content/detectors.js",
-    "content/spa-navigation.js",
-    "content/deezer-metadata.js",
-    "content/soundcloud-metadata.js",
-    "content/toast.js",
-    "content/content-deezer.js",
-    "content/content-soundcloud.js",
+    "extension/content/detectors.js",
+    "userscript/menu.js",
+    "extension/content/spa-navigation.js",
+    "extension/content/deezer-metadata.js",
+    "extension/content/soundcloud-metadata.js",
+    "extension/content/toast.js",
+    "extension/content/content-deezer.js",
+    "extension/content/content-soundcloud.js",
   ];
   const metadata = [
     "// ==UserScript==",
@@ -69,7 +70,8 @@ function emitUserscript() {
     "// @match        https://soundcloud.com/*",
     "// @match        https://*.soundcloud.com/*",
     "// @run-at       document-idle",
-    "// @grant        none",
+    "// @grant        GM_registerMenuCommand",
+    "// @grant        GM.registerMenuCommand",
     "// @updateURL    " + updateUrl,
     "// @downloadURL  " + updateUrl,
     "// ==/UserScript==",
@@ -78,10 +80,10 @@ function emitUserscript() {
   const content = sources
     .map((file) => {
       return (
-        "/* Source: extension/" +
+        "/* Source: " +
         file +
         " */\n" +
-        readFileSync(join(src, file), "utf8").trimEnd()
+        readFileSync(join(root, file), "utf8").trimEnd()
       );
     })
     .join("\n\n");

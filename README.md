@@ -80,7 +80,7 @@ A temporary add-on is removed when you restart Firefox.
 
 Install a userscript manager that works with your browser, then open [ralgrum.user.js](https://raw.githubusercontent.com/kekkodance/ralgrum-browser-extension/master/userscript/ralgrum.user.js) and confirm the installation prompt. The script updates from this GitHub file through your userscript manager.
 
-The userscript shows the same automatic toast as the browser add-on. It does not include the toolbar settings or right-click menu; enable or disable it from your userscript manager.
+The userscript shows the same automatic toast as the browser add-on and provides an **Open in ralgruM** command for the current page or a supported link. It does not include the toolbar settings; enable or disable it from your userscript manager.
 
 ### Connect it to the ralgruM app
 
