@@ -31,7 +31,7 @@
       <td>
         <a href="#userscript"><img src="docs/logos/greasemonkey.svg" width="64" height="64" alt="Greasemonkey logo" /></a>
       </td>
-      <td><a href="https://raw.githubusercontent.com/kekkodance/ralgrum-browser-extension/master/userscript/ralgrum.user.js">Install userscript</a></td>
+      <td><a href="https://raw.githubusercontent.com/kekkodance/ralgrum-browser-extension/master/userscript/ralgrum.user.js">Install UserScript</a></td>
     </tr>
   </table>
 
