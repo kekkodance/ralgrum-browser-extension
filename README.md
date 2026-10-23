@@ -12,7 +12,7 @@
 
   <table align="center">
     <tr>
-      <th>Browser</th>
+      <th></th>
       <th>Install from</th>
     </tr>
     <tr>
