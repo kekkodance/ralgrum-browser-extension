@@ -63,12 +63,16 @@ function emitUserscript() {
   const userscriptVersion = /^\d+$/.test(runNumber || "")
     ? packageInfo.version + "." + runNumber
     : packageInfo.version;
+  const iconUrl =
+    "https://raw.githubusercontent.com/kekkodance/ralgrum-browser-extension/master/extension/icons/icon128.png?v=" +
+    userscriptVersion;
   const metadata = [
     "// ==UserScript==",
     "// @name         ralgruM Browser Integration",
     "// @namespace    https://github.com/kekkodance/ralgrum-browser-extension",
     "// @version      " + userscriptVersion,
     "// @description  Open Deezer and SoundCloud tracks, albums, playlists, and artists in ralgruM.",
+    "// @icon         " + iconUrl,
     "// @match        https://www.deezer.com/*",
     "// @match        https://*.deezer.com/*",
     "// @match        https://soundcloud.com/*",

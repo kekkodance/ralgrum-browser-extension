@@ -1,6 +1,6 @@
 <div align="center">
   <h1>
-    <img src="extension/icons/icon128.png" width="48" height="48" valign="middle" alt="ralgruM logo" />
+    <img src="extension/icons/icon.svg" width="48" height="48" valign="middle" alt="ralgruM logo" />
     ralgruM Browser Integration
   </h1>
   <p>
